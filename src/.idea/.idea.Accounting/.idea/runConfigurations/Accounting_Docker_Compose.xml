@@ -4,12 +4,17 @@
       <settings>
         <option name="envFilePaths">
           <list>
-            <option value="src/.env.development" />
+            <option value=".env.development" />
           </list>
         </option>
-        <option name="sourceFilePath" value="src/compose.yaml" />
+        <option name="sourceFilePath" value="compose.yaml" />
       </settings>
     </deployment>
-    <method v="2" />
+    <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
+    <method v="2">
+      <option name="LaunchBrowser.Before.Run" enabled="true">
+        <option name="url" value="http://localhost:3000" />
+      </option>
+    </method>
   </configuration>
 </component>

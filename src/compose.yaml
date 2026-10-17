@@ -51,9 +51,9 @@ services:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://localhost/health"]
+      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1/health"]
       interval: 10s
       timeout: 5s
       retries: 5
