@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="backend/Server.Api/Server.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+</Solution>
