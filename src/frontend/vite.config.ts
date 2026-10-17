@@ -12,9 +12,13 @@ export default defineConfig({
 		},
 	},
 	server: {
+		watch: {
+			usePolling: true,
+			interval: 200,
+		},
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8080',
+				target: process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8080',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ''),
 			},

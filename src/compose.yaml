@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -35,7 +35,7 @@ services:
       postgresql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/ready"]
+      test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/ready" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -48,21 +48,28 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-3000}:5173"
     depends_on:
       backend:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1/health"]
+      test: [ "CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1:5173/" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
     networks:
       - accounting
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "200"
+      VITE_API_PROXY_TARGET: "http://backend:8080"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
 
 volumes:
-  
   postgres_data:
 
 networks:

@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppNavbar } from '@/components/app-navbar/app-navbar';
-import { InvoicesPage } from '@/pages/invoices-page';
-import { TaxPage } from '@/pages/tax-page';
+import { InvoicesPage } from '@/features/invoices/invoices-page';
+import {TaxPage} from "@/features/tax/tax-page.tsx";
 
 export function App() {
 	return (
@@ -18,6 +18,10 @@ export function App() {
 								replace
 							/>
 						}
+					/>
+					<Route
+						path="/"
+						element={<TaxPage />}
 					/>
 					<Route
 						path="/tax"
