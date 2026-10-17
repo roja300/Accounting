@@ -3,4 +3,7 @@
     <Project Path="backend/Server.Api/Server.Api.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/tests/">
+    <Project Path="backend/Server.Api.Tests/Server.Api.Tests.csproj" />
+  </Folder>
 </Solution>
