@@ -10,7 +10,7 @@ public class WeatherForecastControllerTests
     ];
 
     [Fact]
-    public void Get_ReturnsFiveForecastsWithinTheExpectedRanges()
+    public void ShouldReturnFiveForecastsWithinExpectedRanges()
     {
         var firstExpectedDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
         var controller = new WeatherForecastController();
