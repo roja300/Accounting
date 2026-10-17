@@ -1,0 +1,78 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+	"vcs": {
+		"enabled": false,
+		"clientKind": "git",
+		"useIgnoreFile": false
+	},
+	"files": {
+		"ignoreUnknown": false
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"attributePosition": "multiline",
+		"indentWidth": 4
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"style": {
+				"recommended": true,
+				"noUselessElse": "warn",
+				"useNamingConvention": "warn",
+				"useShorthandAssign": "warn",
+				"useShorthandFunctionType": "warn",
+				"useTemplate": "warn"
+			},
+			"complexity": {
+				"recommended": true,
+				"noEmptyTypeParameters": "error",
+				"noUselessStringConcat": "error",
+				"noUselessTernary": "error",
+				"noUselessTypeConstraint": "warn",
+				"noUselessLoneBlockStatements": "warn",
+				"noUselessEmptyExport": "error",
+				"noForEach": "off",
+				"noExcessiveCognitiveComplexity": "warn",
+				"noExtraBooleanCast": "error",
+				"useOptionalChain": "error",
+				"useFlatMap": "error",
+				"useSimplifiedLogicExpression": "error"
+			},
+			"nursery": {
+				"recommended": true
+			},
+			"suspicious": {
+				"recommended": true,
+				"noReactSpecificProps": "off",
+				"noDuplicateCase": "warn",
+				"noExplicitAny": "warn",
+				"noMisrefactoredShorthandAssign": "warn",
+				"noSelfCompare": "warn",
+				"useAwait": "warn"
+			},
+			"correctness": {
+				"recommended": true,
+				"useImportExtensions": "off",
+				"noUndeclaredDependencies": "off",
+				"noUnusedImports": "warn",
+				"noUnusedVariables": "warn",
+				"useHookAtTopLevel": "warn",
+				"useExhaustiveDependencies": "off",
+				"useJsxKeyInIterable": "off"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single"
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	}
+}

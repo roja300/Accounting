@@ -30,7 +30,7 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 - Reuse existing shadcn/ui primitives from `src/components/ui/` and the `cn` helper from `@/lib/utils`. Use Lucide for icons instead of hand-authored SVGs.
 - Follow the existing Tailwind theme tokens and CSS variables. Avoid hard-coded colours when a semantic token exists, and preserve light/dark theme support.
 - Make UI changes responsive, keyboard accessible, and usable with visible focus states and semantic HTML. Give icon-only controls an accessible name.
-- Follow the existing Prettier style; format only files touched by the task.
+- Use Biome exclusively for frontend linting and formatting. Do not add ESLint, Prettier, or competing lint/format tools. Preserve the settings in `src/frontend/biome.json`, and format only files touched by the task.
 - Every frontend task must preserve or improve automated coverage. Add or update Vitest and Testing Library tests alongside changed components, hooks, utilities, and user-visible behaviour. Bug fixes require a regression test that fails without the fix.
 - Test observable behaviour and accessibility through the way a user interacts with the interface; avoid asserting component implementation details.
 - Place frontend tests in a `__tests__/` directory adjacent to the code or feature they cover. Keep shared test utilities and mocks in `src/testing/`.
@@ -41,7 +41,7 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 Validate frontend changes from `src/frontend/`:
 
 ```powershell
-npm run lint
+npm run check
 npm run typecheck
 npm test
 npm run build
