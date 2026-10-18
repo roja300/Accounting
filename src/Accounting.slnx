@@ -1,8 +1,11 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="backend/Server.Api/Server.Api.csproj" />
+    <Project Path="backend/Server.Shared/Server.Shared.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/">
+    <Project Path="backend/Server.Invoices/Server.Invoices.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="backend/Server.Api.Tests/Server.Api.Tests.csproj" />
   </Folder>
