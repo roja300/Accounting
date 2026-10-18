@@ -16,16 +16,12 @@ test('should show validation messages and not submit an empty work record', asyn
 
 	await user.click(screen.getByRole('button', { name: 'Save work' }));
 
-	expect(screen.getByText('Description is required.')).toBeInTheDocument();
-	expect(screen.getByText('Currency is required.')).toBeInTheDocument();
+	expect(screen.getByText('Enter a description.')).toBeInTheDocument();
+	expect(screen.getByText('Select a currency.')).toBeInTheDocument();
 	expect(screen.getByText('Comments is required.')).toBeInTheDocument();
-	expect(screen.getByText('Client is required.')).toBeInTheDocument();
-	expect(screen.getByText('Project is required.')).toBeInTheDocument();
-	expect(
-		screen.getByText(
-			'Value must be greater than zero with up to two decimal places.',
-		),
-	).toBeInTheDocument();
+	expect(screen.getByText('Select or enter a client.')).toBeInTheDocument();
+	expect(screen.getByText('Select or enter a project.')).toBeInTheDocument();
+	expect(screen.getByText('Enter a value.')).toBeInTheDocument();
 	expect(fetchMock).not.toHaveBeenCalledWith(
 		'/api/invoices',
 		expect.objectContaining({ method: 'POST' }),
@@ -45,9 +41,9 @@ test('should submit the typed dto and navigate after confirming success', async 
 		screen.getByRole('spinbutton', { name: 'Value' }),
 		'125.50',
 	);
-	await user.selectOptions(
-		screen.getByRole('combobox', { name: 'Currency' }),
-		'GBP',
+	await user.click(screen.getByRole('combobox', { name: 'Currency' }));
+	await user.click(
+		screen.getByRole('option', { name: 'Pound sterling (GBP)' }),
 	);
 	await user.type(
 		screen.getByRole('combobox', { name: 'Client' }),
@@ -56,10 +52,12 @@ test('should submit the typed dto and navigate after confirming success', async 
 	expect(
 		screen.getByText('A new client named “New Client” will be created.'),
 	).toBeInTheDocument();
+	await user.keyboard('{Escape}');
 	await user.type(
 		screen.getByRole('combobox', { name: 'Project' }),
 		'Retainer',
 	);
+	await user.keyboard('{Escape}');
 	await user.type(
 		screen.getByRole('textbox', { name: 'Additional comments' }),
 		'Completed October records.',

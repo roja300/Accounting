@@ -40,20 +40,20 @@ Create me a new form creating new work records that can be used as a form to be 
 
 ### Codex Response
 
-[//]: # (Remove these two, this is just as an example of how you should format your responses.)
+#### [2026-10-18 15:05] Created the New Work Form
 
-#### [2026-11-07 16:04] You Did a Thing
-
-Fill me in...
+Replaced the New Work placeholder with a responsive shadcn form for description, value, currency, comments, client, and project. Added React Hook Form and Zod validation, a typed `CreateWorkRecordDto`, character and monetary limits, accessible field-level messages, creatable client and project comboboxes backed by placeholder existing records, a successful-validation dialog, and navigation back to Invoices after acknowledgement.
 
 ##### Comments
 
-1. N/A
+1. Client and project options are intentionally local placeholder data until backend integration is introduced.
+2. Component-level coverage for this form was removed at the user's request; no end-to-end test was added as part of this change.
+3. Type checking and the production build pass. The repository-wide Biome check and existing Vitest suite still report unrelated pre-existing failures in untouched frontend files.
 
-#### [2026-11-07 17:29] You Did a Thing Again
+#### [2026-10-18 15:16] Refined Form Inputs
 
-Fill me in with your updates.
+Removed the browser-native increment and decrement controls from the value field, made additional comments optional, and positioned field supporting text above its associated control.
 
-##### Comments
+#### [2026-10-18 15:20] Restricted Value Input
 
-1. N/A
+Restricted the value field to digits and an optional decimal point with up to two decimal places, preventing signs, scientific notation, and non-numeric pasted content.

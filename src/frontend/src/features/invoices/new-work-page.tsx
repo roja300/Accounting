@@ -1,5 +1,13 @@
-import { BriefcaseBusinessIcon, CheckCircle2Icon } from 'lucide-react';
-import { type FormEvent, useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+	BriefcaseBusinessIcon,
+	CheckCircle2Icon,
+	CirclePlusIcon,
+	InfoIcon,
+} from 'lucide-react';
+import type { Ref } from 'react';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +20,14 @@ import {
 	CardTitle,
 } from '@/components/ui/card';
 import {
+	Combobox,
+	ComboboxContent,
+	ComboboxEmpty,
+	ComboboxInput,
+	ComboboxItem,
+	ComboboxList,
+} from '@/components/ui/combobox';
+import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -20,33 +36,168 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
+	COMMENTS_MAX_LENGTH,
 	type CreateWorkRecordDto,
+	type CreateWorkRecordFormValues,
+	createWorkRecordSchema,
+	currencyOptions,
+	DESCRIPTION_MAX_LENGTH,
+	MAXIMUM_VALUE,
+	RELATED_RECORD_MAX_LENGTH,
+} from '@/features/invoices/create-work-record';
+import {
 	createWorkRecord,
 	getWorkRecordOptions,
 	type WorkRecordDto,
 } from '@/features/invoices/invoice-api';
 
-type WorkRecordField = keyof CreateWorkRecordDto;
-type FormErrors = Partial<Record<WorkRecordField, string>>;
+const monetaryValuePattern = /^\d*(?:\.\d{0,2})?$/;
 
-const descriptionMaximumLength = 200;
-const commentsMaximumLength = 1_000;
-const nameMaximumLength = 100;
-const maximumValue = 9_999_999_999.99;
-const supportedCurrencies = ['GBP', 'EUR', 'USD'] as const;
-const inputClassName =
-	'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20';
+type CreatableComboboxFieldProps = {
+	label: string;
+	name: 'client' | 'project';
+	placeholder: string;
+	options: readonly string[];
+	value: string;
+	onChange: (value: string) => void;
+	onBlur: () => void;
+	inputRef: Ref<HTMLInputElement>;
+	invalid: boolean;
+	error?: string;
+};
+
+function CreatableComboboxField({
+	label,
+	name,
+	placeholder,
+	options,
+	value,
+	onChange,
+	onBlur,
+	inputRef,
+	invalid,
+	error,
+}: CreatableComboboxFieldProps) {
+	const trimmedValue = value.trim();
+	const matchesExistingOption = options.some(
+		(option) =>
+			option.toLocaleLowerCase() === trimmedValue.toLocaleLowerCase(),
+	);
+	const willCreate = trimmedValue.length > 0 && !matchesExistingOption;
+	const availableOptions = willCreate
+		? [...options, trimmedValue]
+		: [...options];
+	const descriptionId = `${name}-description`;
+	const errorId = `${name}-error`;
+
+	return (
+		<Field data-invalid={invalid}>
+			<FieldLabel htmlFor={name}>{label}</FieldLabel>
+			<FieldDescription id={descriptionId}>
+				{willCreate ? (
+					<span className="inline-flex items-center gap-1.5 text-foreground">
+						<InfoIcon
+							className="size-3.5"
+							aria-hidden="true"
+						/>
+						A new {name} named “{trimmedValue}” will be created.
+					</span>
+				) : (
+					`Choose an existing ${name} or enter a new one.`
+				)}
+			</FieldDescription>
+			<Combobox<string>
+				items={availableOptions}
+				inputValue={value}
+				required
+				onInputValueChange={(nextValue, eventDetails) => {
+					if (eventDetails.reason === 'input-change') {
+						onChange(nextValue);
+					}
+				}}
+				onValueChange={(nextValue) => {
+					if (nextValue !== null) {
+						onChange(nextValue);
+					}
+				}}
+			>
+				<ComboboxInput
+					id={name}
+					name={name}
+					placeholder={placeholder}
+					maxLength={RELATED_RECORD_MAX_LENGTH}
+					required
+					aria-invalid={invalid}
+					aria-describedby={`${descriptionId}${invalid ? ` ${errorId}` : ''}`}
+					onBlur={onBlur}
+					ref={inputRef}
+					className="w-full"
+				/>
+				<ComboboxContent>
+					<ComboboxEmpty>No matching {name}s found.</ComboboxEmpty>
+					<ComboboxList>
+						{(option: string) => {
+							const isCreateOption =
+								willCreate && option === trimmedValue;
+
+							return (
+								<ComboboxItem
+									key={option}
+									value={option}
+								>
+									{isCreateOption && (
+										<CirclePlusIcon aria-hidden="true" />
+									)}
+									{isCreateOption
+										? `Create “${option}”`
+										: option}
+								</ComboboxItem>
+							);
+						}}
+					</ComboboxList>
+				</ComboboxContent>
+			</Combobox>
+			{invalid && <FieldError id={errorId}>{error}</FieldError>}
+		</Field>
+	);
+}
 
 export function NewWorkPage() {
 	const navigate = useNavigate();
-	const [client, setClient] = useState('');
-	const [project, setProject] = useState('');
 	const [clients, setClients] = useState<string[]>([]);
 	const [projects, setProjects] = useState<string[]>([]);
-	const [errors, setErrors] = useState<FormErrors>({});
 	const [submitError, setSubmitError] = useState<string>();
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 	const [createdRecord, setCreatedRecord] = useState<WorkRecordDto>();
+	const form = useForm<
+		CreateWorkRecordFormValues,
+		unknown,
+		CreateWorkRecordDto
+	>({
+		resolver: zodResolver(createWorkRecordSchema),
+		defaultValues: {
+			description: '',
+			comments: '',
+			client: '',
+			project: '',
+		},
+	});
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -71,35 +222,24 @@ export function NewWorkPage() {
 		return () => controller.abort();
 	}, []);
 
-	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		const formData = new FormData(event.currentTarget);
-		const valueInput = readFormValue(formData, 'value');
-		const workRecord: CreateWorkRecordDto = {
-			description: readFormValue(formData, 'description').trim(),
-			value: Number(valueInput),
-			currency: readFormValue(formData, 'currency'),
-			comments: readFormValue(formData, 'comments').trim(),
-			client: client.trim(),
-			project: project.trim(),
-		};
-		const validationErrors = validateWorkRecord(workRecord, valueInput);
-
-		setErrors(validationErrors);
+	async function handleSuccessfulSubmit(workRecord: CreateWorkRecordDto) {
 		setSubmitError(undefined);
-		if (Object.keys(validationErrors).length > 0) {
-			return;
-		}
 
-		setIsSubmitting(true);
 		try {
 			setCreatedRecord(await createWorkRecord(workRecord));
+			setSuccessDialogOpen(true);
 		} catch {
 			setSubmitError(
 				'The work record could not be saved. Please try again.',
 			);
-		} finally {
-			setIsSubmitting(false);
+		}
+	}
+
+	function handleDialogOpenChange(open: boolean) {
+		setSuccessDialogOpen(open);
+
+		if (!open) {
+			navigate('/invoices');
 		}
 	}
 
@@ -125,216 +265,375 @@ export function NewWorkPage() {
 					</p>
 				</div>
 
-				<Card className="relative shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-primary">
-					<CardHeader className="border-b pl-6 sm:pl-7">
-						<div className="flex items-start gap-3">
-							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-								<BriefcaseBusinessIcon
-									className="size-5"
-									aria-hidden="true"
-								/>
-							</div>
-							<div>
-								<CardTitle className="text-lg">
-									Work details
-								</CardTitle>
-								<CardDescription className="mt-1 leading-5">
-									All fields are required. Existing clients
-									and projects appear as you type.
-								</CardDescription>
-							</div>
-						</div>
-					</CardHeader>
-
-					<form
-						onSubmit={handleSubmit}
-						noValidate
+				<form
+					onSubmit={form.handleSubmit(handleSuccessfulSubmit)}
+					noValidate
+				>
+					<Card
+						role="region"
+						aria-labelledby="work-details-title"
+						className="shadow-sm"
 					>
-						<CardContent className="grid gap-5 pl-6 sm:grid-cols-2 sm:pl-7">
-							<div className="grid gap-2 sm:col-span-2">
-								<label
-									htmlFor="description"
-									className="text-sm font-medium"
-								>
-									Description
-								</label>
-								<textarea
-									id="description"
-									name="description"
-									rows={3}
-									maxLength={descriptionMaximumLength}
-									aria-invalid={Boolean(errors.description)}
-									aria-describedby={
-										errors.description
-											? 'description-error'
-											: undefined
-									}
-									className={inputClassName}
-								/>
-								<FieldError
-									id="description-error"
-									message={errors.description}
-								/>
-							</div>
-
-							<div className="grid gap-2">
-								<label
-									htmlFor="value"
-									className="text-sm font-medium"
-								>
-									Value
-								</label>
-								<input
-									id="value"
-									name="value"
-									type="number"
-									min="0.01"
-									max={maximumValue}
-									step="0.01"
-									inputMode="decimal"
-									aria-invalid={Boolean(errors.value)}
-									aria-describedby={
-										errors.value ? 'value-error' : undefined
-									}
-									className={inputClassName}
-								/>
-								<FieldError
-									id="value-error"
-									message={errors.value}
-								/>
-							</div>
-
-							<div className="grid gap-2">
-								<label
-									htmlFor="currency"
-									className="text-sm font-medium"
-								>
-									Currency
-								</label>
-								<select
-									id="currency"
-									name="currency"
-									defaultValue=""
-									aria-invalid={Boolean(errors.currency)}
-									aria-describedby={
-										errors.currency
-											? 'currency-error'
-											: undefined
-									}
-									className={inputClassName}
-								>
-									<option
-										value=""
-										disabled
+						<CardHeader className="border-b pl-6 sm:pl-7">
+							<div className="flex items-start gap-3">
+								<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+									<BriefcaseBusinessIcon
+										className="size-5"
+										aria-hidden="true"
+									/>
+								</div>
+								<div>
+									<CardTitle
+										id="work-details-title"
+										className="text-lg"
 									>
-										Select a currency
-									</option>
-									{supportedCurrencies.map((currency) => (
-										<option
-											key={currency}
-											value={currency}
+										Work details
+									</CardTitle>
+									<CardDescription className="mt-1 leading-5">
+										Add the information that will appear on
+										the invoice.
+									</CardDescription>
+								</div>
+							</div>
+						</CardHeader>
+
+						<CardContent className="pl-6 sm:pl-7">
+							<FieldGroup>
+								<Controller
+									name="description"
+									control={form.control}
+									render={({ field, fieldState }) => (
+										<Field
+											data-invalid={fieldState.invalid}
 										>
-											{currency}
-										</option>
-									))}
-								</select>
-								<FieldError
-									id="currency-error"
-									message={errors.currency}
+											<FieldLabel htmlFor={field.name}>
+												Description
+											</FieldLabel>
+											<FieldDescription id="description-limit">
+												Maximum {DESCRIPTION_MAX_LENGTH}{' '}
+												characters.
+											</FieldDescription>
+											<Input
+												{...field}
+												id={field.name}
+												placeholder="e.g. Prepare September management accounts"
+												maxLength={
+													DESCRIPTION_MAX_LENGTH
+												}
+												required
+												aria-invalid={
+													fieldState.invalid
+												}
+												aria-describedby={`description-limit${fieldState.invalid ? ' description-error' : ''}`}
+											/>
+											{fieldState.invalid && (
+												<FieldError
+													id="description-error"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									)}
 								/>
-							</div>
 
-							<NameField
-								id="client"
-								label="Client"
-								value={client}
-								onChange={setClient}
-								options={clients}
-								error={errors.client}
-							/>
-							<NameField
-								id="project"
-								label="Project"
-								value={project}
-								onChange={setProject}
-								options={projects}
-								error={errors.project}
-							/>
+								<div className="grid gap-5 sm:grid-cols-2">
+									<Controller
+										name="value"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel
+													htmlFor={field.name}
+												>
+													Value
+												</FieldLabel>
+												<Input
+													id={field.name}
+													name={field.name}
+													ref={field.ref}
+													type="number"
+													inputMode="decimal"
+													min="0.01"
+													max={MAXIMUM_VALUE}
+													step="0.01"
+													placeholder="0.00"
+													required
+													className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+													value={field.value ?? ''}
+													onBlur={field.onBlur}
+													onKeyDown={(event) => {
+														if (
+															[
+																'e',
+																'E',
+																'+',
+																'-',
+															].includes(
+																event.key,
+															)
+														) {
+															event.preventDefault();
+														}
+													}}
+													onPaste={(event) => {
+														if (
+															!monetaryValuePattern.test(
+																event.clipboardData.getData(
+																	'text',
+																),
+															)
+														) {
+															event.preventDefault();
+														}
+													}}
+													onChange={(event) =>
+														monetaryValuePattern.test(
+															event.target.value,
+														) &&
+														field.onChange(
+															event.target
+																.value === ''
+																? undefined
+																: event.target
+																		.valueAsNumber,
+														)
+													}
+													aria-invalid={
+														fieldState.invalid
+													}
+													aria-describedby={
+														fieldState.invalid
+															? 'value-error'
+															: undefined
+													}
+												/>
+												{fieldState.invalid && (
+													<FieldError
+														id="value-error"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										)}
+									/>
 
-							<div className="grid gap-2 sm:col-span-2">
-								<label
-									htmlFor="comments"
-									className="text-sm font-medium"
-								>
-									Additional comments
-								</label>
-								<textarea
-									id="comments"
+									<Controller
+										name="currency"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<Field
+												data-invalid={
+													fieldState.invalid
+												}
+											>
+												<FieldLabel
+													htmlFor={field.name}
+												>
+													Currency
+												</FieldLabel>
+												<Select
+													items={currencyOptions}
+													name={field.name}
+													value={field.value ?? null}
+													required
+													onValueChange={(value) =>
+														field.onChange(value)
+													}
+												>
+													<SelectTrigger
+														id={field.name}
+														className="w-full"
+														aria-invalid={
+															fieldState.invalid
+														}
+														aria-required="true"
+														aria-describedby={
+															fieldState.invalid
+																? 'currency-error'
+																: undefined
+														}
+														onBlur={field.onBlur}
+													>
+														<SelectValue placeholder="Select a currency" />
+													</SelectTrigger>
+													<SelectContent>
+														{currencyOptions.map(
+															(currency) => (
+																<SelectItem
+																	key={
+																		currency.value
+																	}
+																	value={
+																		currency.value
+																	}
+																>
+																	{
+																		currency.label
+																	}
+																</SelectItem>
+															),
+														)}
+													</SelectContent>
+												</Select>
+												{fieldState.invalid && (
+													<FieldError
+														id="currency-error"
+														errors={[
+															fieldState.error,
+														]}
+													/>
+												)}
+											</Field>
+										)}
+									/>
+								</div>
+
+								<div className="grid gap-5 sm:grid-cols-2">
+									<Controller
+										name="client"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<CreatableComboboxField
+												label="Client"
+												name="client"
+												placeholder="Select or enter a client"
+												options={clients}
+												value={field.value}
+												onChange={field.onChange}
+												onBlur={field.onBlur}
+												inputRef={field.ref}
+												invalid={fieldState.invalid}
+												error={
+													fieldState.error?.message
+												}
+											/>
+										)}
+									/>
+
+									<Controller
+										name="project"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<CreatableComboboxField
+												label="Project"
+												name="project"
+												placeholder="Select or enter a project"
+												options={projects}
+												value={field.value}
+												onChange={field.onChange}
+												onBlur={field.onBlur}
+												inputRef={field.ref}
+												invalid={fieldState.invalid}
+												error={
+													fieldState.error?.message
+												}
+											/>
+										)}
+									/>
+								</div>
+
+								<Controller
 									name="comments"
-									rows={4}
-									maxLength={commentsMaximumLength}
-									aria-invalid={Boolean(errors.comments)}
-									aria-describedby={
-										errors.comments
-											? 'comments-error'
-											: undefined
-									}
-									className={inputClassName}
+									control={form.control}
+									render={({ field, fieldState }) => (
+										<Field
+											data-invalid={fieldState.invalid}
+										>
+											<FieldLabel htmlFor={field.name}>
+												Additional comments
+											</FieldLabel>
+											<FieldDescription id="comments-limit">
+												Maximum {COMMENTS_MAX_LENGTH}{' '}
+												characters.
+											</FieldDescription>
+											<Textarea
+												{...field}
+												id={field.name}
+												placeholder="Add any useful billing context or notes"
+												maxLength={COMMENTS_MAX_LENGTH}
+												aria-invalid={
+													fieldState.invalid
+												}
+												aria-describedby={`comments-limit${fieldState.invalid ? ' comments-error' : ''}`}
+												className="min-h-28 resize-y"
+											/>
+											{fieldState.invalid && (
+												<FieldError
+													id="comments-error"
+													errors={[fieldState.error]}
+												/>
+											)}
+										</Field>
+									)}
 								/>
-								<FieldError
-									id="comments-error"
-									message={errors.comments}
-								/>
-							</div>
-
-							{submitError ? (
-								<p
-									role="alert"
-									className="text-sm text-destructive sm:col-span-2"
-								>
+							</FieldGroup>
+							{submitError && (
+								<FieldError className="mt-5">
 									{submitError}
-								</p>
-							) : null}
+								</FieldError>
+							)}
 						</CardContent>
 
-						<CardFooter className="justify-between gap-3 border-t pl-6 sm:pl-7">
-							<div className="flex items-center gap-2 text-xs text-muted-foreground">
+						<CardFooter className="flex-col items-stretch gap-4 border-t pl-6 sm:flex-row sm:items-center sm:justify-between sm:pl-7">
+							<p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
 								<CheckCircle2Icon
 									className="size-4 text-foreground"
 									aria-hidden="true"
 								/>
-								Saved work is ready for future invoicing.
-							</div>
-							<div className="flex items-center gap-2">
-								<Link
-									to="/invoices"
-									className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+								Complete all required fields.
+							</p>
+							<div className="flex justify-end gap-2">
+								<Button
+									variant="outline"
+									nativeButton={false}
+									render={<Link to="/invoices" />}
 								>
 									Cancel
-								</Link>
+								</Button>
 								<Button
 									type="submit"
-									disabled={isSubmitting}
+									disabled={form.formState.isSubmitting}
 								>
-									{isSubmitting ? 'Saving…' : 'Save work'}
+									{form.formState.isSubmitting
+										? 'Saving…'
+										: 'Save work'}
 								</Button>
 							</div>
 						</CardFooter>
-					</form>
-				</Card>
+					</Card>
+				</form>
 			</div>
 
-			<Dialog open={Boolean(createdRecord)}>
-				<DialogContent showCloseButton={false}>
+			<Dialog
+				open={successDialogOpen}
+				onOpenChange={handleDialogOpenChange}
+			>
+				<DialogContent>
 					<DialogHeader>
+						<div className="mb-1 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+							<CheckCircle2Icon
+								className="size-5"
+								aria-hidden="true"
+							/>
+						</div>
 						<DialogTitle>Work record saved</DialogTitle>
 						<DialogDescription>
-							{createdRecord?.description} is now stored and ready
-							to invoice.
+							{createdRecord
+								? `“${createdRecord.description}” was added to invoice.`
+								: 'The work record was added to invoice.'}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<Button onClick={() => navigate('/invoices')}>
+						<Button
+							type="button"
+							onClick={() => handleDialogOpenChange(false)}
+						>
 							Return to invoices
 						</Button>
 					</DialogFooter>
@@ -342,159 +641,4 @@ export function NewWorkPage() {
 			</Dialog>
 		</section>
 	);
-}
-
-interface NameFieldProps {
-	id: 'client' | 'project';
-	label: string;
-	value: string;
-	onChange: (value: string) => void;
-	options: string[];
-	error?: string;
-}
-
-function NameField({
-	id,
-	label,
-	value,
-	onChange,
-	options,
-	error,
-}: NameFieldProps) {
-	const normalizedValue = value.trim().toLocaleLowerCase();
-	const willCreate =
-		normalizedValue.length > 0 &&
-		!options.some(
-			(option) => option.trim().toLocaleLowerCase() === normalizedValue,
-		);
-	const hintId = `${id}-hint`;
-	const errorId = `${id}-error`;
-
-	return (
-		<div className="grid gap-2">
-			<label
-				htmlFor={id}
-				className="text-sm font-medium"
-			>
-				{label}
-			</label>
-			<input
-				id={id}
-				name={id}
-				list={`${id}-options`}
-				value={value}
-				onChange={(event) => onChange(event.currentTarget.value)}
-				maxLength={nameMaximumLength}
-				aria-invalid={Boolean(error)}
-				aria-describedby={error ? `${hintId} ${errorId}` : hintId}
-				className={inputClassName}
-			/>
-			<datalist id={`${id}-options`}>
-				{options.map((option) => (
-					<option
-						key={option}
-						value={option}
-					/>
-				))}
-			</datalist>
-			<p
-				id={hintId}
-				className="text-xs text-muted-foreground"
-			>
-				{willCreate
-					? `A new ${label.toLocaleLowerCase()} named “${value.trim()}” will be created.`
-					: `Choose an existing ${label.toLocaleLowerCase()} or enter a new name.`}
-			</p>
-			<FieldError
-				id={errorId}
-				message={error}
-			/>
-		</div>
-	);
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-	if (!message) {
-		return null;
-	}
-
-	return (
-		<p
-			id={id}
-			className="text-xs text-destructive"
-		>
-			{message}
-		</p>
-	);
-}
-
-function readFormValue(formData: FormData, name: string) {
-	const value = formData.get(name);
-	return typeof value === 'string' ? value : '';
-}
-
-function validateWorkRecord(
-	workRecord: CreateWorkRecordDto,
-	valueInput: string,
-): FormErrors {
-	const errors: FormErrors = {};
-
-	validateText(
-		errors,
-		'description',
-		workRecord.description,
-		'Description',
-		descriptionMaximumLength,
-	);
-	if (!/^\d+(\.\d{1,2})?$/.test(valueInput) || workRecord.value <= 0) {
-		errors.value =
-			'Value must be greater than zero with up to two decimal places.';
-	} else if (workRecord.value > maximumValue) {
-		errors.value = `Value must not exceed ${maximumValue.toFixed(2)}.`;
-	}
-	if (
-		!supportedCurrencies.some(
-			(currency) => currency === workRecord.currency,
-		)
-	) {
-		errors.currency = 'Currency is required.';
-	}
-	validateText(
-		errors,
-		'comments',
-		workRecord.comments,
-		'Comments',
-		commentsMaximumLength,
-	);
-	validateText(
-		errors,
-		'client',
-		workRecord.client,
-		'Client',
-		nameMaximumLength,
-	);
-	validateText(
-		errors,
-		'project',
-		workRecord.project,
-		'Project',
-		nameMaximumLength,
-	);
-
-	return errors;
-}
-
-function validateText(
-	errors: FormErrors,
-	field: WorkRecordField,
-	value: string,
-	label: string,
-	maximumLength: number,
-) {
-	if (!value.trim()) {
-		errors[field] = `${label} is required.`;
-	} else if (value.trim().length > maximumLength) {
-		errors[field] =
-			`${label} must be ${maximumLength} characters or fewer.`;
-	}
 }
