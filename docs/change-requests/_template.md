@@ -9,7 +9,7 @@ N/A
 
 ### Functional Specification (FS)
 
-1.
+1. 
 
 ### Non-functional Specification (NFS)
 

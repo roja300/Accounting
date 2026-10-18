@@ -5,11 +5,11 @@
 
 ## Overview
 
-N/A
+Create me a new page that can be used as a form to be later integrated with the backend.
 
 ### Functional Specification (FS)
 
-1.
+1. The field
 
 ### Non-functional Specification (NFS)
 
@@ -17,7 +17,7 @@ N/A
 
 ## Notes
 
-- N/A
+- This is just a client side change.
 
 ### Codex Response
 
