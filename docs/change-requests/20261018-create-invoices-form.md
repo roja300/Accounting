@@ -5,7 +5,7 @@
 
 ## Overview
 
-Create me a new page that can be used as a form to be later integrated with the backend. 
+Create me a new form creating new work records that can be used as a form to be later integrated with the backend. There is already a page and start of a form for this. 
 
 ### Functional Specification (FS)
 
@@ -24,12 +24,15 @@ Create me a new page that can be used as a form to be later integrated with the 
 7. The form should present the projects field as drop down with previously created items.
 8. The form should enable creating new projects by typing in a value that isn't in the dropdown.
 9. The form should inform the user if a project is going to be created with text associated to the field.
+10. The form should present a dialog upon successful validation (in future after the request is successful, pretend that this is the case for now). 
+11. The form should navigate a user to the original page upon succesful validation.
 
 ### Non-functional Specification (NFS)
 
 1. The form should use whichever framework/library Shadcn UI prefers for validation. *See docs*.
 2. The form should be supported by a typed DTO. This will later be sent to the client.
 3. The form should associate validation messages alongisde each field.
+4. Use any ShadCN components where applicable. This would include the dialogue, dropdowns, fields, etc. Download anything missing.
 
 ## Notes
 
