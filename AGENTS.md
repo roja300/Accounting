@@ -39,11 +39,9 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 - Follow the existing Tailwind theme tokens and CSS variables. Avoid hard-coded colours when a semantic token exists, and preserve light/dark theme support.
 - Make UI changes responsive, keyboard accessible, and usable with visible focus states and semantic HTML. Give icon-only controls an accessible name.
 - Use Biome exclusively for frontend linting and formatting. Do not add ESLint, Prettier, or competing lint/format tools. Preserve the settings in `src/frontend/biome.json`, and format only files touched by the task.
-- Every frontend task must preserve or improve automated coverage. Add or update Vitest and Testing Library tests alongside changed components, hooks, utilities, and user-visible behaviour. Bug fixes require a regression test that fails without the fix.
+- Cover frontend user-visible behaviour with end-to-end tests. Do not add Vitest or Testing Library component or integration tests for UI behaviour; keep the existing Vitest suite passing until it is separately migrated or removed.
 - Test observable behaviour and accessibility through the way a user interacts with the interface; avoid asserting component implementation details.
-- Place frontend tests in a `__tests__/` directory adjacent to the code or feature they cover. Keep shared test utilities and mocks in `src/testing/`.
-- Name unit and integration test files after the subject in kebab-case, using `*.test.ts` for non-JSX code and `*.test.tsx` for React code. For example, `format-currency.test.ts` and `invoice-form.test.tsx`.
-- Keep end-to-end tests under `e2e/tests/` and name them with the kebab-case `*.spec.ts` suffix, such as `create-invoice.spec.ts`. Do not use `.spec` for Vitest unit or integration tests.
+- Keep end-to-end tests under `e2e/tests/` and name them with the kebab-case `*.spec.ts` suffix, such as `create-invoice.spec.ts`.
 - Name frontend cases with `test("should <observable behaviour>", ...)`. Keep the text lowercase after `should`, specific about the outcome, and meaningful when shown alone in test output. Use `describe` only when grouping related scenarios makes the output clearer.
 
 Validate frontend changes from `src/frontend/`:
