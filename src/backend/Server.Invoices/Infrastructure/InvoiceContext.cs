@@ -14,6 +14,59 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
 
     public DbSet<Project> Projects => Set<Project>();
 
+    public async Task<InvoiceQueryResult> QueryInvoicesAsync(
+        InvoiceQuery query,
+        CancellationToken cancellationToken)
+    {
+        var invoices = Invoices.AsNoTracking();
+
+        if (query.CreatedOnOrAfter is not null)
+        {
+            invoices = invoices.Where(invoice => invoice.CreatedAt >= query.CreatedOnOrAfter);
+        }
+
+        if (query.CreatedOnOrBefore is not null)
+        {
+            invoices = invoices.Where(invoice => invoice.CreatedAt <= query.CreatedOnOrBefore);
+        }
+
+        if (query.NormalizedClient is not null)
+        {
+            invoices = invoices.Where(
+                invoice => invoice.Client.NormalizedName == query.NormalizedClient);
+        }
+
+        if (query.NormalizedProject is not null)
+        {
+            invoices = invoices.Where(
+                invoice => invoice.Project.NormalizedName == query.NormalizedProject);
+        }
+
+        if (query.DescriptionSearch is not null)
+        {
+            var pattern = $"%{EscapeLikePattern(query.DescriptionSearch)}%";
+            invoices = invoices.Where(
+                invoice => EF.Functions.ILike(invoice.Description, pattern, "\\"));
+        }
+
+        var totalItems = await invoices.CountAsync(cancellationToken);
+        if (query.Offset > int.MaxValue)
+        {
+            return new InvoiceQueryResult([], totalItems);
+        }
+
+        var items = await invoices
+            .Include(invoice => invoice.Client)
+            .Include(invoice => invoice.Project)
+            .OrderByDescending(invoice => invoice.CreatedAt)
+            .ThenByDescending(invoice => invoice.Id)
+            .Skip((int)query.Offset)
+            .Take(query.Limit)
+            .ToListAsync(cancellationToken);
+
+        return new InvoiceQueryResult(items, totalItems);
+    }
+
     public Task<Client?> FindClientAsync(
         string normalizedName,
         CancellationToken cancellationToken)
@@ -69,5 +122,13 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InvoiceContext).Assembly);
+    }
+
+    private static string EscapeLikePattern(string value)
+    {
+        return value
+            .Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("%", "\\%", StringComparison.Ordinal)
+            .Replace("_", "\\_", StringComparison.Ordinal);
     }
 }

@@ -4,6 +4,10 @@ namespace Server.Invoices.Infrastructure.Abstractions;
 
 public interface IInvoiceContext
 {
+    Task<InvoiceQueryResult> QueryInvoicesAsync(
+        InvoiceQuery query,
+        CancellationToken cancellationToken);
+
     Task<Client?> FindClientAsync(string normalizedName, CancellationToken cancellationToken);
 
     Task<Project?> FindProjectAsync(string normalizedName, CancellationToken cancellationToken);
