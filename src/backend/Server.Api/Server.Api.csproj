@@ -9,8 +9,17 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Npgsql" Version="10.0.3" />
     </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Server.Invoices\Server.Invoices.csproj" />
+    <ProjectReference Include="..\Server.Shared\Server.Shared.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.dockerignore">

@@ -1,12 +1,23 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Server.Api.Health;
+using Server.Invoices;
+using Server.Shared.Modules;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-builder.Services.AddControllers();
+List<IModule> modules =
+[
+    new InvoicesModule(),
+];
+
+foreach (var module in modules)
+{
+    module.RegisterServices(builder.Services, builder.Configuration);
+}
+
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -27,6 +38,14 @@ builder.Services.AddHealthChecks()
         tags: ["ready"]);
 
 var app = builder.Build();
+
+foreach (var module in modules)
+{
+    await module.InitializeAsync(
+        app.Services,
+        builder.Configuration,
+        app.Lifetime.ApplicationStopping);
+}
 
 if (app.Environment.IsDevelopment())
 {

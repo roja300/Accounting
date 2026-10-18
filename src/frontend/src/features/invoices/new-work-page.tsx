@@ -6,7 +6,7 @@ import {
 	InfoIcon,
 } from 'lucide-react';
 import type { Ref } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -58,15 +58,15 @@ import {
 	createWorkRecordSchema,
 	currencyOptions,
 	DESCRIPTION_MAX_LENGTH,
+	MAXIMUM_VALUE,
 	RELATED_RECORD_MAX_LENGTH,
 } from '@/features/invoices/create-work-record';
+import {
+	createWorkRecord,
+	getWorkRecordOptions,
+	type WorkRecordDto,
+} from '@/features/invoices/invoice-api';
 
-const clients = ['Acme Ltd', 'Northstar Studio', 'Rojaware'] as const;
-const projects = [
-	'Annual accounts',
-	'Mobile application',
-	'Website redesign',
-] as const;
 const monetaryValuePattern = /^\d*(?:\.\d{0,2})?$/;
 
 type CreatableComboboxFieldProps = {
@@ -180,9 +180,11 @@ function CreatableComboboxField({
 
 export function NewWorkPage() {
 	const navigate = useNavigate();
+	const [clients, setClients] = useState<string[]>([]);
+	const [projects, setProjects] = useState<string[]>([]);
+	const [submitError, setSubmitError] = useState<string>();
 	const [successDialogOpen, setSuccessDialogOpen] = useState(false);
-	const [submittedWork, setSubmittedWork] =
-		useState<CreateWorkRecordDto | null>(null);
+	const [createdRecord, setCreatedRecord] = useState<WorkRecordDto>();
 	const form = useForm<
 		CreateWorkRecordFormValues,
 		unknown,
@@ -197,9 +199,40 @@ export function NewWorkPage() {
 		},
 	});
 
-	function handleSuccessfulSubmit(workRecord: CreateWorkRecordDto) {
-		setSubmittedWork(workRecord);
-		setSuccessDialogOpen(true);
+	useEffect(() => {
+		const controller = new AbortController();
+
+		getWorkRecordOptions(controller.signal)
+			.then((options) => {
+				setClients(options.clients);
+				setProjects(options.projects);
+			})
+			.catch((error: unknown) => {
+				if (
+					!(
+						error instanceof DOMException &&
+						error.name === 'AbortError'
+					)
+				) {
+					setClients([]);
+					setProjects([]);
+				}
+			});
+
+		return () => controller.abort();
+	}, []);
+
+	async function handleSuccessfulSubmit(workRecord: CreateWorkRecordDto) {
+		setSubmitError(undefined);
+
+		try {
+			setCreatedRecord(await createWorkRecord(workRecord));
+			setSuccessDialogOpen(true);
+		} catch {
+			setSubmitError(
+				'The work record could not be saved. Please try again.',
+			);
+		}
 	}
 
 	function handleDialogOpenChange(open: boolean) {
@@ -325,7 +358,7 @@ export function NewWorkPage() {
 													type="number"
 													inputMode="decimal"
 													min="0.01"
-													max="999999999.99"
+													max={MAXIMUM_VALUE}
 													step="0.01"
 													placeholder="0.00"
 													required
@@ -543,6 +576,11 @@ export function NewWorkPage() {
 									)}
 								/>
 							</FieldGroup>
+							{submitError && (
+								<FieldError className="mt-5">
+									{submitError}
+								</FieldError>
+							)}
 						</CardContent>
 
 						<CardFooter className="flex-col items-stretch gap-4 border-t pl-6 sm:flex-row sm:items-center sm:justify-between sm:pl-7">
@@ -561,7 +599,14 @@ export function NewWorkPage() {
 								>
 									Cancel
 								</Button>
-								<Button type="submit">Save work</Button>
+								<Button
+									type="submit"
+									disabled={form.formState.isSubmitting}
+								>
+									{form.formState.isSubmitting
+										? 'Saving…'
+										: 'Save work'}
+								</Button>
 							</div>
 						</CardFooter>
 					</Card>
@@ -580,11 +625,11 @@ export function NewWorkPage() {
 								aria-hidden="true"
 							/>
 						</div>
-						<DialogTitle>Work record ready</DialogTitle>
+						<DialogTitle>Work record saved</DialogTitle>
 						<DialogDescription>
-							{submittedWork
-								? `“${submittedWork.description}” passed validation and is ready to be saved.`
-								: 'The work record passed validation and is ready to be saved.'}
+							{createdRecord
+								? `“${createdRecord.description}” was added to invoice.`
+								: 'The work record was added to invoice.'}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
