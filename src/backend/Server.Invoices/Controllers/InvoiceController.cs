@@ -10,8 +10,30 @@ namespace Server.Invoices.Controllers;
 [Route("invoices")]
 public sealed class InvoiceController(
     IInvoiceService invoiceService,
-    InvoiceValidator validator) : ControllerBase
+    InvoiceValidator validator,
+    InvoiceListQueryValidator listQueryValidator) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<InvoicePageDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<InvoicePageDto>> GetPage(
+        [FromQuery] InvoiceListQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var validation = listQueryValidator.Validate(query);
+        if (!validation.IsValid)
+        {
+            return ValidationProblem(new ValidationProblemDetails(
+                validation.Errors.ToDictionary(error => error.Key, error => error.Value))
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "One or more validation errors occurred."
+            });
+        }
+
+        return Ok(await invoiceService.GetPageAsync(query, cancellationToken));
+    }
+
     [HttpGet("{id:guid}", Name = nameof(GetById))]
     [ProducesResponseType<InvoiceResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

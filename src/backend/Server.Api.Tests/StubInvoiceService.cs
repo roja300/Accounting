@@ -10,6 +10,22 @@ internal sealed class StubInvoiceService : IInvoiceService
 
     public InvoiceDto? CreatedInvoice { get; private set; }
 
+    public InvoiceListQueryDto? ListQuery { get; private set; }
+
+    public Task<InvoicePageDto> GetPageAsync(
+        InvoiceListQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ListQuery = query;
+        return Task.FromResult(new InvoicePageDto(
+            [ToResponse(CreateInvoice())],
+            query.Page,
+            query.PageSize,
+            1,
+            1));
+    }
+
     public Task<InvoiceResponseDto> CreateAsync(
         InvoiceDto invoice,
         CancellationToken cancellationToken)

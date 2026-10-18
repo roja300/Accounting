@@ -6,6 +6,10 @@ namespace Server.Invoices.Tests;
 
 internal sealed class MockInvoiceContext : IInvoiceContext
 {
+    public IReadOnlyList<Invoice> Invoices { get; set; } = [];
+
+    public InvoiceQuery? CapturedQuery { get; private set; }
+
     public Client? Client { get; set; }
 
     public Project? Project { get; set; }
@@ -13,6 +17,15 @@ internal sealed class MockInvoiceContext : IInvoiceContext
     public Invoice? AddedInvoice { get; private set; }
 
     public int SaveChangesCalls { get; private set; }
+
+    public Task<InvoiceQueryResult> QueryInvoicesAsync(
+        InvoiceQuery query,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        CapturedQuery = query;
+        return Task.FromResult(new InvoiceQueryResult(Invoices, Invoices.Count));
+    }
 
     public Task<Client?> FindClientAsync(
         string normalizedName,
