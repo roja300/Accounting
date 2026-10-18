@@ -1,6 +1,6 @@
 using Server.Invoices.Domain;
 
-namespace Server.Invoices.Application.Abstractions;
+namespace Server.Invoices.Infrastructure.Abstractions;
 
 public interface IInvoiceContext
 {

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Domain;
+using Server.Invoices.Infrastructure.Abstractions;
 
 namespace Server.Invoices.Infrastructure;
 

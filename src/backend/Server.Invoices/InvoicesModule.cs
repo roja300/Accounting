@@ -6,6 +6,7 @@ using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
 using Server.Invoices.Controllers;
 using Server.Invoices.Infrastructure;
+using Server.Invoices.Infrastructure.Abstractions;
 using Server.Shared.Modules;
 
 namespace Server.Invoices;

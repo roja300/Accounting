@@ -1,6 +1,7 @@
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
 using Server.Invoices.Domain;
+using Server.Invoices.Infrastructure.Abstractions;
 
 namespace Server.Invoices.Application.Services;
 
