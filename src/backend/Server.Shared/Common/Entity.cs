@@ -13,10 +13,10 @@ public class Entity
     /// <summary>
     /// When the entity was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     
     /// <summary>
     /// When the entity was updated.
     /// </summary>
-    public DateTime UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }

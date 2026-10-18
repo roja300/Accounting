@@ -7,17 +7,19 @@ namespace Server.Invoices.Domain;
 /// </summary>
 public class Invoice : Entity
 {
-    public string Title { get; set; }
-    
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
     
     public decimal Value { get; set; }
+
+    public string Currency { get; set; } = string.Empty;
+
+    public string Comments { get; set; } = string.Empty;
     
     public Guid ClientId { get; set; }
     
     public Guid ProjectId { get; set; }
     
-    public Client Client { get; set; }
+    public Client Client { get; set; } = null!;
     
-    public Project Project { get; set; }
+    public Project Project { get; set; } = null!;
 }

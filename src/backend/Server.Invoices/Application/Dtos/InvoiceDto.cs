@@ -1,16 +1,23 @@
-﻿namespace Server.Invoices.Application.Dtos;
+namespace Server.Invoices.Application.Dtos;
 
-public record InvoiceDto
-{
-    public Guid Id { get; set; }
-    
-    public string Title { get; set; }
-    
-    public string Description { get; set; }
-    
-    public decimal Value { get; set; }
-    
-    public Guid ClientId { get; set; }
-    
-    public Guid ProjectId { get; set; }
-}
+public sealed record InvoiceDto(
+    string Description,
+    decimal Value,
+    string Currency,
+    string Comments,
+    string Client,
+    string Project);
+
+public sealed record InvoiceResponseDto(
+    Guid Id,
+    string Description,
+    decimal Value,
+    string Currency,
+    string Comments,
+    string Client,
+    string Project,
+    DateTimeOffset CreatedAt);
+
+public sealed record InvoiceOptionsDto(
+    IReadOnlyList<string> Clients,
+    IReadOnlyList<string> Projects);

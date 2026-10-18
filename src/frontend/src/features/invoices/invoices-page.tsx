@@ -14,18 +14,22 @@ export function InvoicesPage() {
 			title={'Invoices'}
 			headerContent={
 				<Tooltip>
-					<TooltipTrigger>
-						<Button>
-							<Link to={'/work/new'}>
-								<PlusIcon />
-							</Link>
-						</Button>
+					<TooltipTrigger
+						render={
+							<Button
+								render={<Link to={'/work/new'} />}
+								size="icon"
+								aria-label="Create new work record"
+							/>
+						}
+					>
+						<PlusIcon aria-hidden="true" />
 					</TooltipTrigger>
 					<TooltipContent>Create new record of work</TooltipContent>
 				</Tooltip>
 			}
 		>
-			Invoice Table
+			<section aria-label="Invoices page">Invoice Table</section>
 		</PageContainer>
 	);
 }

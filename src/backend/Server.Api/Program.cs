@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Server.Api.Health;
+using Server.Invoices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-builder.Services.AddControllers();
+builder.Services.AddInvoicesModule(builder.Configuration);
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -27,6 +28,10 @@ builder.Services.AddHealthChecks()
         tags: ["ready"]);
 
 var app = builder.Build();
+
+await app.Services.ApplyInvoicesMigrationsAsync(
+    builder.Configuration,
+    app.Lifetime.ApplicationStopping);
 
 if (app.Environment.IsDevelopment())
 {
