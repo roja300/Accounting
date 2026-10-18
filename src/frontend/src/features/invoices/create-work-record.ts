@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
-export const DESCRIPTION_MAX_LENGTH = 120;
-export const COMMENTS_MAX_LENGTH = 500;
-export const RELATED_RECORD_MAX_LENGTH = 80;
+export const DESCRIPTION_MAX_LENGTH = 200;
+export const COMMENTS_MAX_LENGTH = 1_000;
+export const RELATED_RECORD_MAX_LENGTH = 100;
+export const MAXIMUM_VALUE = 9_999_999_999.99;
 
 export const currencyOptions = [
 	{ label: 'Pound sterling (GBP)', value: 'GBP' },
@@ -27,7 +28,7 @@ export const createWorkRecordSchema = z.object({
 			invalid_type_error: 'Enter a value.',
 		})
 		.positive('Value must be greater than zero.')
-		.max(999_999_999.99, 'Value must be 999,999,999.99 or less.'),
+		.max(MAXIMUM_VALUE, 'Value must be 9,999,999,999.99 or less.'),
 	currency: z.enum(['GBP', 'EUR', 'USD'], {
 		// biome-ignore lint/style/useNamingConvention: Zod v3 defines these option keys.
 		required_error: 'Select a currency.',

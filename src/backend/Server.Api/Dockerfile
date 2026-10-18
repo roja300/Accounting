@@ -10,6 +10,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Server.Api/Server.Api.csproj", "Server.Api/"]
+COPY ["Server.Invoices/Server.Invoices.csproj", "Server.Invoices/"]
+COPY ["Server.Shared/Server.Shared.csproj", "Server.Shared/"]
 RUN dotnet restore "Server.Api/Server.Api.csproj"
 COPY . .
 WORKDIR "/src/Server.Api"
