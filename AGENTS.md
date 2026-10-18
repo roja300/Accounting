@@ -6,7 +6,8 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 
 - Inspect the working tree before editing and preserve unrelated user changes.
 - Keep changes focused on the requested outcome; avoid opportunistic rewrites or dependency upgrades.
-- Do not stage or commit changes unless the user explicitly asks.
+- Commit completed work as you go in small, focused commits after the relevant validation passes. Before staging, inspect the working tree and include only files that belong to the current logical change; preserve unrelated user changes.
+- Do not amend, squash, rebase, force-push, or push commits unless the user explicitly asks.
 - Never add secrets, credentials, connection strings, or real customer data.
 - Do not edit generated output or dependency directories such as `bin/`, `obj/`, `dist/`, or `node_modules/`.
 - Do not hard-wrap Markdown prose. Keep each paragraph and list item on one physical line and let the editor or renderer handle visual wrapping.
@@ -27,7 +28,7 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 - Before editing implementation files, inspect the working tree and current branch, then create and switch to a dedicated branch derived from the change-request filename. For example, `docs/change-requests/20261018-create-invoices-form.md` should use `change/20261018-create-invoices-form`.
 - If already on the dedicated branch for that change request, continue using it. If the branch already exists, reuse it instead of creating a duplicate when doing so is safe.
 - Preserve unrelated working-tree changes when creating or switching branches. Never stash, reset, discard, or overwrite them without explicit user approval; ask for direction if they prevent a safe branch change.
-- Creating the branch does not authorize staging or committing changes. Continue to follow the repository rule that staging and commits require an explicit user request.
+- After creating or switching to the dedicated branch, commit completed and validated increments throughout the change request. Keep each commit focused and exclude unrelated working-tree changes.
 
 ## Frontend
 
