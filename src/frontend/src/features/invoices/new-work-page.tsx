@@ -546,7 +546,10 @@ export function NewWorkPage() {
 											data-invalid={fieldState.invalid}
 										>
 											<FieldLabel htmlFor={field.name}>
-												Additional comments
+												Additional comments{' '}
+												<span className="font-normal text-muted-foreground">
+													(optional)
+												</span>
 											</FieldLabel>
 											<FieldDescription id="comments-limit">
 												Maximum {COMMENTS_MAX_LENGTH}{' '}

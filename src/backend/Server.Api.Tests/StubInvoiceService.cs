@@ -52,7 +52,7 @@ internal sealed class StubInvoiceService : IInvoiceService
             invoice.Description,
             invoice.Value,
             invoice.Currency,
-            invoice.Comments,
+            invoice.Comments ?? string.Empty,
             invoice.Client,
             invoice.Project,
             new DateTimeOffset(2026, 10, 18, 12, 30, 0, TimeSpan.Zero));

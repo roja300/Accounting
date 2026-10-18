@@ -59,6 +59,20 @@ public class InvoiceServiceTests
         Assert.Equal(existingProject.Id, saved.ProjectId);
     }
 
+    [Fact]
+    public async Task ShouldPersistEmptyComments_WhenCommentsAreOmitted()
+    {
+        var context = new MockInvoiceContext();
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+        var request = CreateInvoice() with { Comments = null };
+
+        var response = await service.CreateAsync(request, CancellationToken.None);
+
+        var saved = Assert.IsType<Invoice>(context.AddedInvoice);
+        Assert.Equal(string.Empty, saved.Comments);
+        Assert.Equal(string.Empty, response.Comments);
+    }
+
     private static InvoiceDto CreateInvoice()
     {
         return new InvoiceDto(

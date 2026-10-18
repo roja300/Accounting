@@ -27,7 +27,7 @@ public sealed class InvoiceService(
             Description = invoice.Description.Trim(),
             Value = invoice.Value,
             Currency = invoice.Currency.Trim().ToUpperInvariant(),
-            Comments = invoice.Comments.Trim(),
+            Comments = invoice.Comments?.Trim() ?? string.Empty,
             ClientId = client.Id,
             ProjectId = project.Id,
             Client = client,

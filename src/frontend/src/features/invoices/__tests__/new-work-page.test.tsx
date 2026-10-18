@@ -18,7 +18,6 @@ test('should show validation messages and not submit an empty work record', asyn
 
 	expect(screen.getByText('Enter a description.')).toBeInTheDocument();
 	expect(screen.getByText('Select a currency.')).toBeInTheDocument();
-	expect(screen.getByText('Comments is required.')).toBeInTheDocument();
 	expect(screen.getByText('Select or enter a client.')).toBeInTheDocument();
 	expect(screen.getByText('Select or enter a project.')).toBeInTheDocument();
 	expect(screen.getByText('Enter a value.')).toBeInTheDocument();
@@ -58,10 +57,6 @@ test('should submit the typed dto and navigate after confirming success', async 
 		'Retainer',
 	);
 	await user.keyboard('{Escape}');
-	await user.type(
-		screen.getByRole('textbox', { name: 'Additional comments' }),
-		'Completed October records.',
-	);
 	await user.click(screen.getByRole('button', { name: 'Save work' }));
 
 	expect(
@@ -75,7 +70,6 @@ test('should submit the typed dto and navigate after confirming success', async 
 		description: 'Monthly bookkeeping',
 		value: 125.5,
 		currency: 'GBP',
-		comments: 'Completed October records.',
 		client: 'New Client',
 		project: 'Retainer',
 	});

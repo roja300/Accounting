@@ -35,6 +35,26 @@ public class InvoiceEndpointTests
     }
 
     [Fact]
+    public async Task ShouldCreateInvoice_WhenCommentsAreOmitted()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+        var request = CreateRequest() with { Comments = null };
+
+        var response = await client.PostAsJsonAsync(
+            "/invoices",
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(request, service.CreatedInvoice);
+        var created = await response.Content.ReadFromJsonAsync<InvoiceResponseDto>(
+            CancellationToken.None);
+        Assert.NotNull(created);
+        Assert.Equal(string.Empty, created.Comments);
+    }
+
+    [Fact]
     public async Task ShouldReturnValidationProblemWithoutCallingService_WhenRequestIsInvalid()
     {
         var service = new StubInvoiceService();

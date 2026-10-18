@@ -2,13 +2,14 @@ export interface CreateWorkRecordDto {
 	description: string;
 	value: number;
 	currency: string;
-	comments: string;
+	comments?: string;
 	client: string;
 	project: string;
 }
 
-export interface WorkRecordDto extends CreateWorkRecordDto {
+export interface WorkRecordDto extends Omit<CreateWorkRecordDto, 'comments'> {
 	id: string;
+	comments: string;
 	createdAt: string;
 }
 

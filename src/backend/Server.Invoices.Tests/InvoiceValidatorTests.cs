@@ -17,7 +17,7 @@ public class InvoiceValidatorTests
     }
 
     [Fact]
-    public void ShouldReturnErrorsForEveryField_WhenInvoiceIsEmpty()
+    public void ShouldReturnErrorsForRequiredFields_WhenInvoiceIsEmpty()
     {
         var invoice = new InvoiceDto(" ", 0, "", " ", "", " ");
 
@@ -25,8 +25,19 @@ public class InvoiceValidatorTests
 
         Assert.False(result.IsValid);
         Assert.Equal(
-            ["description", "value", "currency", "comments", "client", "project"],
+            ["description", "value", "currency", "client", "project"],
             result.Errors.Keys);
+    }
+
+    [Fact]
+    public void ShouldAcceptInvoice_WhenCommentsAreOmitted()
+    {
+        var invoice = CreateValidInvoice() with { Comments = null };
+
+        var result = _validator.Validate(invoice);
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]

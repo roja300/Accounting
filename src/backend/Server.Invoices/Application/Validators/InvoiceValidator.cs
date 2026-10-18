@@ -24,7 +24,7 @@ public sealed class InvoiceValidator
             DescriptionMaximumLength);
         ValidateValue(errors, invoice.Value);
         ValidateCurrency(errors, invoice.Currency);
-        ValidateRequiredText(
+        ValidateOptionalText(
             errors,
             "comments",
             invoice.Comments,
@@ -48,6 +48,19 @@ public sealed class InvoiceValidator
             errors[key] = [$"{displayName} is required."];
         }
         else if (value.Trim().Length > maximumLength)
+        {
+            errors[key] = [$"{displayName} must be {maximumLength} characters or fewer."];
+        }
+    }
+
+    private static void ValidateOptionalText(
+        IDictionary<string, string[]> errors,
+        string key,
+        string? value,
+        string displayName,
+        int maximumLength)
+    {
+        if (value?.Trim().Length > maximumLength)
         {
             errors[key] = [$"{displayName} must be {maximumLength} characters or fewer."];
         }
