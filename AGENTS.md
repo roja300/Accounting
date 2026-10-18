@@ -19,7 +19,15 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 - `src/frontend/`: React 19, TypeScript, Vite, Tailwind CSS 4, and shadcn/ui.
 - `src/backend/Server.Api/`: ASP.NET Core controller-based API targeting .NET 10.
 - `src/Accounting.slnx`: backend solution file.
-- `docs/change-requests/`: requirement documents and their template. When a change request is named, treat its functional and non-functional requirements as the source of truth. If work is initiated through a change request, ensure that a branch is created to support that.
+- `docs/change-requests/`: requirement documents and their template.
+
+### Change Request Workflow
+
+- Treat a task that identifies a file under `docs/change-requests/` as work initiated through a change request. Read the document before implementation and treat its functional and non-functional requirements as the source of truth.
+- Before editing implementation files, inspect the working tree and current branch, then create and switch to a dedicated branch derived from the change-request filename. For example, `docs/change-requests/20261018-create-invoices-form.md` should use `change/20261018-create-invoices-form`.
+- If already on the dedicated branch for that change request, continue using it. If the branch already exists, reuse it instead of creating a duplicate when doing so is safe.
+- Preserve unrelated working-tree changes when creating or switching branches. Never stash, reset, discard, or overwrite them without explicit user approval; ask for direction if they prevent a safe branch change.
+- Creating the branch does not authorize staging or committing changes. Continue to follow the repository rule that staging and commits require an explicit user request.
 
 ## Frontend
 
