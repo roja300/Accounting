@@ -49,3 +49,11 @@ Replaced the New Work placeholder with a responsive shadcn form for description,
 1. Client and project options are intentionally local placeholder data until backend integration is introduced.
 2. Component-level coverage for this form was removed at the user's request; no end-to-end test was added as part of this change.
 3. Type checking and the production build pass. The repository-wide Biome check and existing Vitest suite still report unrelated pre-existing failures in untouched frontend files.
+
+#### [2026-10-18 15:16] Refined Form Inputs
+
+Removed the browser-native increment and decrement controls from the value field, made additional comments optional, and positioned field supporting text above its associated control.
+
+#### [2026-10-18 15:20] Restricted Value Input
+
+Restricted the value field to digits and an optional decimal point with up to two decimal places, preventing signs, scientific notation, and non-numeric pasted content.

@@ -37,11 +37,12 @@ export const createWorkRecordSchema = z.object({
 	comments: z
 		.string()
 		.trim()
-		.min(1, 'Enter additional comments.')
 		.max(
 			COMMENTS_MAX_LENGTH,
 			`Comments must be ${COMMENTS_MAX_LENGTH} characters or fewer.`,
-		),
+		)
+		.transform((comments) => comments || undefined)
+		.optional(),
 	client: z
 		.string()
 		.trim()

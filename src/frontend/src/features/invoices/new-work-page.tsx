@@ -67,6 +67,7 @@ const projects = [
 	'Mobile application',
 	'Website redesign',
 ] as const;
+const monetaryValuePattern = /^\d*(?:\.\d{0,2})?$/;
 
 type CreatableComboboxFieldProps = {
 	label: string;
@@ -108,6 +109,19 @@ function CreatableComboboxField({
 	return (
 		<Field data-invalid={invalid}>
 			<FieldLabel htmlFor={name}>{label}</FieldLabel>
+			<FieldDescription id={descriptionId}>
+				{willCreate ? (
+					<span className="inline-flex items-center gap-1.5 text-foreground">
+						<InfoIcon
+							className="size-3.5"
+							aria-hidden="true"
+						/>
+						A new {name} named “{trimmedValue}” will be created.
+					</span>
+				) : (
+					`Choose an existing ${name} or enter a new one.`
+				)}
+			</FieldDescription>
 			<Combobox<string>
 				items={availableOptions}
 				inputValue={value}
@@ -159,19 +173,6 @@ function CreatableComboboxField({
 					</ComboboxList>
 				</ComboboxContent>
 			</Combobox>
-			<FieldDescription id={descriptionId}>
-				{willCreate ? (
-					<span className="inline-flex items-center gap-1.5 text-foreground">
-						<InfoIcon
-							className="size-3.5"
-							aria-hidden="true"
-						/>
-						A new {name} named “{trimmedValue}” will be created.
-					</span>
-				) : (
-					`Choose an existing ${name} or enter a new one.`
-				)}
-			</FieldDescription>
 			{invalid && <FieldError id={errorId}>{error}</FieldError>}
 		</Field>
 	);
@@ -238,7 +239,7 @@ export function NewWorkPage() {
 					<Card
 						role="region"
 						aria-labelledby="work-details-title"
-						className="relative shadow-sm before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-primary"
+						className="shadow-sm"
 					>
 						<CardHeader className="border-b pl-6 sm:pl-7">
 							<div className="flex items-start gap-3">
@@ -275,6 +276,10 @@ export function NewWorkPage() {
 											<FieldLabel htmlFor={field.name}>
 												Description
 											</FieldLabel>
+											<FieldDescription id="description-limit">
+												Maximum {DESCRIPTION_MAX_LENGTH}{' '}
+												characters.
+											</FieldDescription>
 											<Input
 												{...field}
 												id={field.name}
@@ -288,10 +293,6 @@ export function NewWorkPage() {
 												}
 												aria-describedby={`description-limit${fieldState.invalid ? ' description-error' : ''}`}
 											/>
-											<FieldDescription id="description-limit">
-												Maximum {DESCRIPTION_MAX_LENGTH}{' '}
-												characters.
-											</FieldDescription>
 											{fieldState.invalid && (
 												<FieldError
 													id="description-error"
@@ -328,9 +329,38 @@ export function NewWorkPage() {
 													step="0.01"
 													placeholder="0.00"
 													required
+													className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 													value={field.value ?? ''}
 													onBlur={field.onBlur}
+													onKeyDown={(event) => {
+														if (
+															[
+																'e',
+																'E',
+																'+',
+																'-',
+															].includes(
+																event.key,
+															)
+														) {
+															event.preventDefault();
+														}
+													}}
+													onPaste={(event) => {
+														if (
+															!monetaryValuePattern.test(
+																event.clipboardData.getData(
+																	'text',
+																),
+															)
+														) {
+															event.preventDefault();
+														}
+													}}
 													onChange={(event) =>
+														monetaryValuePattern.test(
+															event.target.value,
+														) &&
 														field.onChange(
 															event.target
 																.value === ''
@@ -483,24 +513,26 @@ export function NewWorkPage() {
 											data-invalid={fieldState.invalid}
 										>
 											<FieldLabel htmlFor={field.name}>
-												Additional comments
+												Additional comments{' '}
+												<span className="font-normal text-muted-foreground">
+													(optional)
+												</span>
 											</FieldLabel>
+											<FieldDescription id="comments-limit">
+												Maximum {COMMENTS_MAX_LENGTH}{' '}
+												characters.
+											</FieldDescription>
 											<Textarea
 												{...field}
 												id={field.name}
 												placeholder="Add any useful billing context or notes"
 												maxLength={COMMENTS_MAX_LENGTH}
-												required
 												aria-invalid={
 													fieldState.invalid
 												}
 												aria-describedby={`comments-limit${fieldState.invalid ? ' comments-error' : ''}`}
 												className="min-h-28 resize-y"
 											/>
-											<FieldDescription id="comments-limit">
-												Maximum {COMMENTS_MAX_LENGTH}{' '}
-												characters.
-											</FieldDescription>
 											{fieldState.invalid && (
 												<FieldError
 													id="comments-error"
@@ -519,7 +551,7 @@ export function NewWorkPage() {
 									className="size-4 text-foreground"
 									aria-hidden="true"
 								/>
-								All fields are required.
+								Complete all required fields.
 							</p>
 							<div className="flex justify-end gap-2">
 								<Button
