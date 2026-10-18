@@ -93,9 +93,4 @@ public class InvoiceServiceTests
             UpdatedAt = Now
         };
     }
-
-    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-    }
 }
