@@ -6,13 +6,14 @@ using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
 using Server.Invoices.Controllers;
 using Server.Invoices.Infrastructure;
+using Server.Shared.Modules;
 
 namespace Server.Invoices;
 
-public static class DependencyInjection
+public sealed class InvoicesModule : IModule
 {
-    public static IServiceCollection AddInvoicesModule(
-        this IServiceCollection services,
+    public void RegisterServices(
+        IServiceCollection services,
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("PostgreSQL");
@@ -32,12 +33,10 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<InvoiceValidator>();
         services.AddSingleton(TimeProvider.System);
-
-        return services;
     }
 
-    public static async Task ApplyInvoicesMigrationsAsync(
-        this IServiceProvider services,
+    public async Task InitializeAsync(
+        IServiceProvider services,
         IConfiguration configuration,
         CancellationToken cancellationToken = default)
     {

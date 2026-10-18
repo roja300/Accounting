@@ -16,9 +16,10 @@
         <PackageReference Include="Npgsql" Version="10.0.3" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Server.Invoices\Server.Invoices.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Server.Invoices\Server.Invoices.csproj" />
+    <ProjectReference Include="..\Server.Shared\Server.Shared.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.dockerignore">
