@@ -12,6 +12,48 @@ namespace Server.Api.Tests;
 public class InvoiceEndpointTests
 {
     [Fact]
+    public async Task ShouldReturnFilteredInvoicePage_WhenQueryIsValid()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+
+        var response = await client.GetAsync(
+            "/invoices?dateAfter=2026-10-01&dateBefore=2026-10-31&client=Acme%20Ltd&project=Retainer&search=bookkeeping&page=2&pageSize=6",
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var query = Assert.IsType<InvoiceListQueryDto>(service.ListQuery);
+        Assert.Equal(new DateOnly(2026, 10, 1), query.DateAfter);
+        Assert.Equal(new DateOnly(2026, 10, 31), query.DateBefore);
+        Assert.Equal("Acme Ltd", query.Client);
+        Assert.Equal("Retainer", query.Project);
+        Assert.Equal("bookkeeping", query.Search);
+        Assert.Equal(2, query.Page);
+        Assert.Equal(6, query.PageSize);
+        var page = await response.Content.ReadFromJsonAsync<InvoicePageDto>(
+            CancellationToken.None);
+        Assert.NotNull(page);
+        Assert.Single(page.Items);
+    }
+
+    [Fact]
+    public async Task ShouldReturnValidationProblemWithoutCallingService_WhenListQueryIsInvalid()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+
+        var response = await client.GetAsync(
+            "/invoices?dateAfter=2026-10-31&dateBefore=2026-10-01&page=0&pageSize=51",
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Null(service.ListQuery);
+        var body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        Assert.Contains("dateRange", body, StringComparison.Ordinal);
+        Assert.Contains("pageSize", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ShouldCreateInvoice_WhenRequestIsValid()
     {
         var service = new StubInvoiceService();

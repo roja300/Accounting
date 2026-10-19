@@ -9,6 +9,46 @@ public class InvoiceServiceTests
     private static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 30, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldReturnFilteredPage_WhenQueryIsProvided()
+    {
+        var invoice = CreateInvoiceEntity();
+        var context = new MockInvoiceContext { Invoices = [invoice] };
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+        var query = new InvoiceListQueryDto
+        {
+            DateAfter = new DateOnly(2026, 10, 1),
+            DateBefore = new DateOnly(2026, 10, 18),
+            Client = " acme ltd ",
+            Project = " retainer ",
+            Search = " monthly ",
+            Page = 2,
+            PageSize = 6
+        };
+
+        var page = await service.GetPageAsync(query, CancellationToken.None);
+
+        var persistenceQuery = Assert.IsType<Infrastructure.Abstractions.InvoiceQuery>(
+            context.CapturedQuery);
+        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), persistenceQuery.CreatedOnOrAfter);
+        Assert.Equal(
+            new DateTimeOffset(new DateTime(2026, 10, 18, 23, 59, 59, 999), TimeSpan.Zero).AddTicks(9_999),
+            persistenceQuery.CreatedOnOrBefore);
+        Assert.Equal("ACME LTD", persistenceQuery.NormalizedClient);
+        Assert.Equal("RETAINER", persistenceQuery.NormalizedProject);
+        Assert.Equal("monthly", persistenceQuery.DescriptionSearch);
+        Assert.Equal(6, persistenceQuery.Offset);
+        Assert.Equal(6, persistenceQuery.Limit);
+        Assert.Equal(2, page.Page);
+        Assert.Equal(6, page.PageSize);
+        Assert.Equal(1, page.TotalItems);
+        Assert.Equal(1, page.TotalPages);
+        var item = Assert.Single(page.Items);
+        Assert.Equal(invoice.Id, item.Id);
+        Assert.Equal(invoice.Client.Name, item.Client);
+        Assert.Equal(invoice.Project.Name, item.Project);
+    }
+
+    [Fact]
     public async Task ShouldPersistInvoiceWithNewClientAndProject_WhenNamesDoNotExist()
     {
         var context = new MockInvoiceContext();
@@ -103,6 +143,26 @@ public class InvoiceServiceTests
             Id = Guid.Parse("d843fe1f-e8b7-45a2-8b88-361bfc977fb7"),
             Name = "Retainer",
             NormalizedName = "RETAINER",
+            CreatedAt = Now,
+            UpdatedAt = Now
+        };
+    }
+
+    private static Invoice CreateInvoiceEntity()
+    {
+        var client = CreateClient();
+        var project = CreateProject();
+        return new Invoice
+        {
+            Id = Guid.Parse("1f184969-9587-4103-b6ee-80a467669fa8"),
+            Description = "Monthly bookkeeping",
+            Value = 125.50m,
+            Currency = "GBP",
+            Comments = "Completed October records.",
+            ClientId = client.Id,
+            ProjectId = project.Id,
+            Client = client,
+            Project = project,
             CreatedAt = Now,
             UpdatedAt = Now
         };

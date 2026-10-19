@@ -12,6 +12,7 @@
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
+		"test:e2e": "playwright test --config playwright.config.ts",
 		"test:watch": "vitest",
 		"preview": "vite preview"
 	},
@@ -35,6 +36,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.16",
+		"@playwright/test": "^1.64.1",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.3",
 		"@testing-library/user-event": "^14.6.8",

@@ -18,6 +18,24 @@ export interface WorkRecordOptionsDto {
 	projects: string[];
 }
 
+export interface WorkRecordFilters {
+	dateAfter?: string;
+	dateBefore?: string;
+	project?: string;
+	client?: string;
+	search?: string;
+	page: number;
+	pageSize: number;
+}
+
+export interface WorkRecordPageDto {
+	items: WorkRecordDto[];
+	page: number;
+	pageSize: number;
+	totalItems: number;
+	totalPages: number;
+}
+
 const invoicesPath = '/api/invoices';
 
 export function createWorkRecord(
@@ -36,6 +54,27 @@ export function getWorkRecordOptions(
 	signal?: AbortSignal,
 ): Promise<WorkRecordOptionsDto> {
 	return request<WorkRecordOptionsDto>(`${invoicesPath}/options`, { signal });
+}
+
+export function getWorkRecords(
+	filters: WorkRecordFilters,
+	signal?: AbortSignal,
+): Promise<WorkRecordPageDto> {
+	const parameters = new URLSearchParams({
+		page: filters.page.toString(),
+		pageSize: filters.pageSize.toString(),
+	});
+
+	for (const [name, value] of Object.entries(filters)) {
+		if (name !== 'page' && name !== 'pageSize' && value) {
+			parameters.set(name, value.toString());
+		}
+	}
+
+	return request<WorkRecordPageDto>(
+		`${invoicesPath}?${parameters.toString()}`,
+		{ signal },
+	);
 }
 
 async function request<T>(input: string, init: RequestInit): Promise<T> {
