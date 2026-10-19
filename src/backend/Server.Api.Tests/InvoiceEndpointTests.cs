@@ -115,6 +115,57 @@ public class InvoiceEndpointTests
         Assert.Contains("currency", body, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ShouldUpdateInvoice_WhenRequestIsValid()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+        var request = CreateRequest() with { Description = "Year-end accounts" };
+
+        var response = await client.PutAsJsonAsync(
+            $"/invoices/{StubInvoiceService.InvoiceId}",
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(StubInvoiceService.InvoiceId, service.UpdatedInvoiceId);
+        Assert.Equal(request, service.UpdatedInvoice);
+        var updated = await response.Content.ReadFromJsonAsync<InvoiceResponseDto>(
+            CancellationToken.None);
+        Assert.NotNull(updated);
+        Assert.Equal("Year-end accounts", updated.Description);
+    }
+
+    [Fact]
+    public async Task ShouldReturnValidationProblemWithoutUpdating_WhenUpdateRequestIsInvalid()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+        var request = CreateRequest() with { Description = "" };
+
+        var response = await client.PutAsJsonAsync(
+            $"/invoices/{StubInvoiceService.InvoiceId}",
+            request,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Null(service.UpdatedInvoice);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFound_WhenUpdatedInvoiceDoesNotExist()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+
+        var response = await client.PutAsJsonAsync(
+            $"/invoices/{Guid.NewGuid()}",
+            CreateRequest(),
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private static HttpClient CreateClient(StubInvoiceService service)
     {
         var factory = new WebApplicationFactory<Program>()

@@ -113,6 +113,54 @@ public class InvoiceServiceTests
         Assert.Equal(string.Empty, response.Comments);
     }
 
+    [Fact]
+    public async Task ShouldUpdateInvoiceAndRelationships_WhenInvoiceExists()
+    {
+        var invoice = CreateInvoiceEntity();
+        var context = new MockInvoiceContext { StoredInvoice = invoice };
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+        var request = new InvoiceDto(
+            " Year-end accounts ",
+            950m,
+            "eur",
+            " Draft prepared. ",
+            " Northwind Ltd ",
+            " Annual accounts ");
+
+        var response = await service.UpdateAsync(
+            invoice.Id,
+            request,
+            CancellationToken.None);
+
+        Assert.NotNull(response);
+        Assert.Equal("Year-end accounts", invoice.Description);
+        Assert.Equal(950m, invoice.Value);
+        Assert.Equal("EUR", invoice.Currency);
+        Assert.Equal("Draft prepared.", invoice.Comments);
+        Assert.Equal("Northwind Ltd", invoice.Client.Name);
+        Assert.Equal("NORTHWIND LTD", invoice.Client.NormalizedName);
+        Assert.Equal("Annual accounts", invoice.Project.Name);
+        Assert.Equal("ANNUAL ACCOUNTS", invoice.Project.NormalizedName);
+        Assert.Equal(Now, invoice.UpdatedAt);
+        Assert.Equal(1, context.SaveChangesCalls);
+        Assert.Equal(invoice.Id, response.Id);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNullWithoutSaving_WhenUpdatedInvoiceDoesNotExist()
+    {
+        var context = new MockInvoiceContext();
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+
+        var response = await service.UpdateAsync(
+            Guid.NewGuid(),
+            CreateInvoice(),
+            CancellationToken.None);
+
+        Assert.Null(response);
+        Assert.Equal(0, context.SaveChangesCalls);
+    }
+
     private static InvoiceDto CreateInvoice()
     {
         return new InvoiceDto(
