@@ -41,7 +41,9 @@ dotnet dev-certs https --export-path certificates/tls.crt --format Pem --no-pass
 docker compose --env-file .env.development -f compose.yaml -f compose.https.yaml up --build
 ```
 
-The HTTPS overlay expects `tls.crt` and `tls.key` in `HTTPS_CERTIFICATE_DIRECTORY`, which defaults to `src/certificates`. It enables TLS on both browser-facing services and uses the same certificate for local API traffic.
+The HTTPS overlay expects `tls.crt` and `tls.key` in `HTTPS_CERTIFICATE_DIRECTORY`, which defaults to `src/certificates`. It enables TLS for the browser-facing frontend and the directly exposed API. The frontend terminates browser TLS and proxies API requests over the isolated Compose network.
+
+Firefox uses its own certificate store by default. To trust this local certificate in Firefox, either set `security.enterprise_roots.enabled` to `true` in `about:config` and restart Firefox, or import `certificates/tls.crt` under Settings > Privacy & Security > Certificates > View Certificates > Servers and trust it for websites. Edge/Chrome on Windows use the certificate trusted by `dotnet dev-certs https --trust` automatically.
 
 - HTTPS frontend: `https://localhost:3000`
 - HTTPS API and OpenAPI document: `https://localhost:8443/openapi/v1.json`

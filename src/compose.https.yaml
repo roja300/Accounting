@@ -17,10 +17,9 @@ services:
 
   frontend:
     environment:
-      API_PROXY_VERIFY_TLS: "false"
       HTTPS_CERTIFICATE_PATH: /https/tls.crt
       HTTPS_KEY_PATH: /https/tls.key
-      VITE_API_PROXY_TARGET: "https://backend:8081"
+      VITE_API_PROXY_TARGET: "http://backend:8080"
     volumes:
       - "${HTTPS_CERTIFICATE_DIRECTORY:?Set HTTPS_CERTIFICATE_DIRECTORY}:/https:ro"
     healthcheck:
