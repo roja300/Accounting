@@ -16,6 +16,8 @@ internal sealed class MockInvoiceContext : IInvoiceContext
 
     public Invoice? AddedInvoice { get; private set; }
 
+    public Invoice? StoredInvoice { get; set; }
+
     public int SaveChangesCalls { get; private set; }
 
     public Task<InvoiceQueryResult> QueryInvoicesAsync(
@@ -55,7 +57,16 @@ internal sealed class MockInvoiceContext : IInvoiceContext
     public Task<Invoice?> GetInvoiceAsync(Guid id, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(AddedInvoice?.Id == id ? AddedInvoice : null);
+        var invoice = StoredInvoice ?? AddedInvoice;
+        return Task.FromResult(invoice?.Id == id ? invoice : null);
+    }
+
+    public Task<Invoice?> GetInvoiceForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(StoredInvoice?.Id == id ? StoredInvoice : null);
     }
 
     public Task<IReadOnlyList<string>> GetClientNamesAsync(

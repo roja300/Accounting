@@ -41,10 +41,8 @@ public sealed class InvoiceService(
         var now = timeProvider.GetUtcNow();
         var clientName = invoice.Client.Trim();
         var projectName = invoice.Project.Trim();
-        var client = await context.FindClientAsync(NormalizeName(clientName), cancellationToken)
-            ?? CreateClient(clientName, now);
-        var project = await context.FindProjectAsync(NormalizeName(projectName), cancellationToken)
-            ?? CreateProject(projectName, now);
+        var client = await GetOrCreateClientAsync(clientName, now, cancellationToken);
+        var project = await GetOrCreateProjectAsync(projectName, now, cancellationToken);
 
         var entity = new Invoice
         {
@@ -67,6 +65,38 @@ public sealed class InvoiceService(
         return Map(entity);
     }
 
+    public async Task<InvoiceResponseDto?> UpdateAsync(
+        Guid id,
+        InvoiceDto invoice,
+        CancellationToken cancellationToken)
+    {
+        var entity = await context.GetInvoiceForUpdateAsync(id, cancellationToken);
+        if (entity is null)
+        {
+            return null;
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var clientName = invoice.Client.Trim();
+        var projectName = invoice.Project.Trim();
+        var client = await GetOrCreateClientAsync(clientName, now, cancellationToken);
+        var project = await GetOrCreateProjectAsync(projectName, now, cancellationToken);
+
+        entity.Description = invoice.Description.Trim();
+        entity.Value = invoice.Value;
+        entity.Currency = invoice.Currency.Trim().ToUpperInvariant();
+        entity.Comments = invoice.Comments?.Trim() ?? string.Empty;
+        entity.ClientId = client.Id;
+        entity.ProjectId = project.Id;
+        entity.Client = client;
+        entity.Project = project;
+        entity.UpdatedAt = now;
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Map(entity);
+    }
+
     public async Task<InvoiceResponseDto?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken)
@@ -80,6 +110,24 @@ public sealed class InvoiceService(
         var clients = await context.GetClientNamesAsync(cancellationToken);
         var projects = await context.GetProjectNamesAsync(cancellationToken);
         return new InvoiceOptionsDto(clients, projects);
+    }
+
+    private async Task<Client> GetOrCreateClientAsync(
+        string name,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        return await context.FindClientAsync(NormalizeName(name), cancellationToken)
+            ?? CreateClient(name, now);
+    }
+
+    private async Task<Project> GetOrCreateProjectAsync(
+        string name,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        return await context.FindProjectAsync(NormalizeName(name), cancellationToken)
+            ?? CreateProject(name, now);
     }
 
     private static Client CreateClient(string name, DateTimeOffset now)
