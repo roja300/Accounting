@@ -201,6 +201,145 @@ namespace Server.Invoices.Infrastructure.Migrations
                     b.ToTable("clients", (string)null);
                 });
 
+            modelBuilder.Entity("Server.Invoices.Domain.GeneratedInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BusinessAddress")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("business_address");
+
+                    b.Property<string>("BusinessEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("business_email");
+
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("business_name");
+
+                    b.Property<string>("BusinessPhone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("business_phone");
+
+                    b.Property<string>("ClientAddress")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("client_address");
+
+                    b.Property<string>("ClientEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("client_email");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("client_name");
+
+                    b.Property<string>("ClientPhone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("client_phone");
+
+                    b.Property<string>("CompanyNumber")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("company_number");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("invoice_number");
+
+                    b.Property<DateOnly>("IssueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("issue_date");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("subtotal");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("VatNumber")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)")
+                        .HasColumnName("vat_number");
+
+                    b.HasKey("Id")
+                        .HasName("pk_generated_invoices");
+
+                    b.HasIndex("ClientId")
+                        .HasDatabaseName("ix_generated_invoices_client_id");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ux_generated_invoices_invoice_number");
+
+                    b.HasIndex("Status", "IssueDate")
+                        .HasDatabaseName("ix_generated_invoices_status_issue_date");
+
+                    b.ToTable("generated_invoices", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_generated_invoices_due_date", "due_date >= issue_date");
+
+                            t.HasCheckConstraint("ck_generated_invoices_status", "status IN ('exported', 'sent', 'paymentReceived', 'deleted')");
+
+                            t.HasCheckConstraint("ck_generated_invoices_subtotal_positive", "subtotal > 0");
+                        });
+                });
+
             modelBuilder.Entity("Server.Invoices.Domain.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -234,6 +373,10 @@ namespace Server.Invoices.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("GeneratedInvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("generated_invoice_id");
+
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid")
                         .HasColumnName("project_id");
@@ -252,6 +395,9 @@ namespace Server.Invoices.Infrastructure.Migrations
 
                     b.HasIndex("ClientId")
                         .HasDatabaseName("ix_invoices_client_id");
+
+                    b.HasIndex("GeneratedInvoiceId")
+                        .HasDatabaseName("ix_invoices_generated_invoice_id");
 
                     b.HasIndex("ProjectId")
                         .HasDatabaseName("ix_invoices_project_id");
@@ -309,6 +455,12 @@ namespace Server.Invoices.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_invoices_clients_client_id");
 
+                    b.HasOne("Server.Invoices.Domain.GeneratedInvoice", "GeneratedInvoice")
+                        .WithMany("WorkRecords")
+                        .HasForeignKey("GeneratedInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoices_generated_invoices_generated_invoice_id");
+
                     b.HasOne("Server.Invoices.Domain.Project", "Project")
                         .WithMany("Invoices")
                         .HasForeignKey("ProjectId")
@@ -318,12 +470,19 @@ namespace Server.Invoices.Infrastructure.Migrations
 
                     b.Navigation("Client");
 
+                    b.Navigation("GeneratedInvoice");
+
                     b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Server.Invoices.Domain.Client", b =>
                 {
                     b.Navigation("Invoices");
+                });
+
+            modelBuilder.Entity("Server.Invoices.Domain.GeneratedInvoice", b =>
+                {
+                    b.Navigation("WorkRecords");
                 });
 
             modelBuilder.Entity("Server.Invoices.Domain.Project", b =>
