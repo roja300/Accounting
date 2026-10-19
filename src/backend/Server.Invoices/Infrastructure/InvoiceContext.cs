@@ -99,6 +99,16 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
     }
 
+    public Task<Invoice?> GetInvoiceForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return Invoices
+            .Include(invoice => invoice.Client)
+            .Include(invoice => invoice.Project)
+            .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<string>> GetClientNamesAsync(
         CancellationToken cancellationToken)
     {

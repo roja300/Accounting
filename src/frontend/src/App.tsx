@@ -34,6 +34,10 @@ export function App() {
 						element={<NewWorkPage />}
 					/>
 					<Route
+						path="/work/:recordId/edit"
+						element={<NewWorkPage mode="edit" />}
+					/>
+					<Route
 						path="/invoices"
 						element={<InvoicesPage />}
 					/>

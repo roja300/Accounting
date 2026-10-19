@@ -1,12 +1,13 @@
 import {
 	expect,
-	test,
 	type Page,
+	test,
 } from '../../src/frontend/node_modules/@playwright/test';
 
 const records = Array.from({ length: 10 }, (_, index) => ({
 	id: `record-${index + 1}`,
-	description: index === 9 ? 'Final review' : `Monthly bookkeeping ${index + 1}`,
+	description:
+		index === 9 ? 'Final review' : `Monthly bookkeeping ${index + 1}`,
 	value: 125.5 + index,
 	currency: 'GBP',
 	comments: 'Completed October records.',
@@ -28,7 +29,9 @@ async function mockInvoiceApi(page: Page) {
 		const url = new URL(route.request().url());
 		const requestedPage = Number(url.searchParams.get('page') ?? '1');
 		const search = url.searchParams.get('search');
-		const filtered = search ? [records[0]] : records.slice((requestedPage - 1) * 9, requestedPage * 9);
+		const filtered = search
+			? [records[0]]
+			: records.slice((requestedPage - 1) * 9, requestedPage * 9);
 
 		return route.fulfill({
 			json: {
@@ -42,12 +45,16 @@ async function mockInvoiceApi(page: Page) {
 	});
 }
 
-test('should show work records as cards and paginate them', async ({ page }) => {
+test('should show work records as cards and paginate them', async ({
+	page,
+}) => {
 	await mockInvoiceApi(page);
 	await page.goto('/invoices');
 
 	await expect(page.getByRole('article')).toHaveCount(9);
-	await expect(page.getByRole('heading', { name: 'Work records' })).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: 'Work records' }),
+	).toBeVisible();
 	await expect(page.getByText('1-9 of 10 work records')).toBeVisible();
 
 	await page.getByRole('button', { name: 'Next' }).click();
@@ -55,7 +62,9 @@ test('should show work records as cards and paginate them', async ({ page }) => 
 	await expect(page.getByText('Final review')).toBeVisible();
 });
 
-test('should send all selected filters when applying them', async ({ page }) => {
+test('should send all selected filters when applying them', async ({
+	page,
+}) => {
 	await mockInvoiceApi(page);
 	await page.goto('/invoices');
 
@@ -71,14 +80,20 @@ test('should send all selected filters when applying them', async ({ page }) => 
 	await expect(page.getByText('1-1 of 1 work records')).toBeVisible();
 });
 
-test('should keep edit and delete actions disabled', async ({ page }) => {
+test('should offer edit while keeping delete disabled', async ({ page }) => {
 	await mockInvoiceApi(page);
 	await page.goto('/invoices');
 
-	const actions = page.locator('summary[aria-label="Actions for Monthly bookkeeping 1"]');
+	const actions = page.locator(
+		'summary[aria-label="Actions for Monthly bookkeeping 1"]',
+	);
 	await expect(actions).toHaveCount(1);
-	const menuItems = actions.locator('xpath=..').locator('button[role="menuitem"]');
+	await actions.click();
+	const menuItems = actions.locator('xpath=..').getByRole('menuitem');
 	await expect(menuItems).toHaveCount(2);
-	await expect(menuItems.nth(0)).toBeDisabled();
+	await expect(menuItems.nth(0)).toHaveAttribute(
+		'href',
+		'/work/record-1/edit',
+	);
 	await expect(menuItems.nth(1)).toBeDisabled();
 });

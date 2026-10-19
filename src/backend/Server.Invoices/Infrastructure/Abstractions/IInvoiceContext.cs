@@ -16,6 +16,8 @@ public interface IInvoiceContext
 
     Task<Invoice?> GetInvoiceAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Invoice?> GetInvoiceForUpdateAsync(Guid id, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<string>> GetClientNamesAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyList<string>> GetProjectNamesAsync(CancellationToken cancellationToken);

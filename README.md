@@ -13,7 +13,7 @@ Accounting is a work-record and invoicing application. It provides a React web i
 
 ### Prerequisites
 
-Install Docker Desktop with Docker Compose, Node.js 20 or later, and the .NET 10 SDK. Docker is the simplest way to run the complete application because it supplies PostgreSQL and configures the API and frontend together.
+Install Docker Desktop with Docker Compose, Node.js 20 or later, and the .NET 10 SDK. Docker is the simplest way to run the complete application because it supplies PostgreSQL and configures the API and frontend together. HTTPS also requires a trusted development certificate or a certificate and private key supplied by your deployment environment.
 
 ### Docker Compose
 
@@ -30,6 +30,24 @@ Open the frontend at `http://localhost:3000`. The frontend proxies `/api` reques
 - OpenAPI document: `http://localhost:8080/openapi/v1.json`
 - Live readiness check: `http://localhost:8080/health/ready`
 - PostgreSQL: `localhost:5432`
+
+To run the complete stack over HTTPS, trust and export the .NET development certificate as PEM files. The certificate directory is ignored by Git and must never contain committed production keys.
+
+```powershell
+Set-Location src
+New-Item -ItemType Directory -Force certificates
+dotnet dev-certs https --trust
+dotnet dev-certs https --export-path certificates/tls.crt --format Pem --no-password
+docker compose --env-file .env.development -f compose.yaml -f compose.https.yaml up --build
+```
+
+The HTTPS overlay expects `tls.crt` and `tls.key` in `HTTPS_CERTIFICATE_DIRECTORY`, which defaults to `src/certificates`. It enables TLS on both browser-facing services and uses the same certificate for local API traffic.
+
+- HTTPS frontend: `https://localhost:3000`
+- HTTPS API and OpenAPI document: `https://localhost:8443/openapi/v1.json`
+- HTTPS readiness check: `https://localhost:8443/health/ready`
+
+Production deployments should replace the development certificate with a certificate issued for the deployed host, protect the private key outside the repository, and terminate TLS at the application gateway or configure the supplied certificate paths through the deployment environment.
 
 The API applies pending Entity Framework migrations when it starts with a PostgreSQL connection string. Stop the stack with:
 
@@ -58,12 +76,15 @@ npm ci
 npm run dev
 ```
 
-Vite serves the frontend at `http://localhost:5173`. By default, its `/api` proxy targets `http://localhost:8080`; override this when the API is running on another port:
+Vite serves the frontend at `http://localhost:5173`. By default, its `/api` proxy targets `http://localhost:8080`; use the HTTPS API launch profile by overriding the target and allowing its trusted development certificate:
 
 ```powershell
-$env:VITE_API_PROXY_TARGET = "http://localhost:5200"
+$env:VITE_API_PROXY_TARGET = "https://localhost:7199"
+$env:API_PROXY_VERIFY_TLS = "false"
 npm run dev
 ```
+
+To serve Vite itself over HTTPS, set `HTTPS_CERTIFICATE_PATH` and `HTTPS_KEY_PATH` to PEM certificate and key files before running `npm run dev`. Keep `API_PROXY_VERIFY_TLS` enabled for certificates issued by a trusted authority; disabling it is only intended for the local self-signed development certificate.
 
 ### Run the backend locally
 
@@ -73,10 +94,11 @@ PostgreSQL must be available before using persistence-backed API endpoints. Star
 Set-Location src
 docker compose --env-file .env.development up -d postgresql
 Set-Location ..
-dotnet run --project src/backend/Server.Api --launch-profile http
+dotnet dev-certs https --trust
+dotnet run --project src/backend/Server.Api --launch-profile https
 ```
 
-The HTTP launch profile uses `http://localhost:5200`. Supply `ConnectionStrings__PostgreSQL` through the environment when running outside Compose; do not commit credentials or connection strings.
+The HTTPS launch profile uses `https://localhost:7199` and redirects requests from `http://localhost:5200`. Supply `ConnectionStrings__PostgreSQL` through the environment when running outside Compose; do not commit credentials, connection strings, certificates, or private keys.
 
 ### Tests and quality checks
 
@@ -109,7 +131,7 @@ Use `npm run test:watch` for an interactive Vitest session. Frontend user-visibl
 
 For frontend debugging, run Vite with `npm run dev` and use the browser developer tools. API requests appear under `/api`; the Vite proxy keeps browser requests same-origin during local development.
 
-For backend debugging, start `Server.Api` with the `http` launch profile from Visual Studio, Visual Studio Code, or `dotnet run`. Set breakpoints in controllers, application services, or persistence code and inspect the API through OpenAPI at `http://localhost:5200/openapi/v1.json` when the development environment is active.
+For backend debugging, start `Server.Api` with the `https` launch profile from Visual Studio, Visual Studio Code, or `dotnet run`. Set breakpoints in controllers, application services, or persistence code and inspect the API through OpenAPI at `https://localhost:7199/openapi/v1.json` when the development environment is active.
 
 Use `/health/live` to check that the API process is responding and `/health/ready` to check PostgreSQL connectivity. When diagnosing persistence startup, inspect the API logs for migration or connection errors and verify that PostgreSQL is healthy with `docker compose ps`.
 
