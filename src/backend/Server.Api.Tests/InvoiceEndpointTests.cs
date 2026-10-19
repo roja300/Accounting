@@ -97,6 +97,22 @@ public class InvoiceEndpointTests
     }
 
     [Fact]
+    public async Task ShouldReturnValidationProblem_WhenCustomerIsNotConfigured()
+    {
+        var service = new StubInvoiceService { RejectClient = true };
+        using var client = CreateClient(service);
+
+        var response = await client.PostAsJsonAsync(
+            "/invoices",
+            CreateRequest() with { Client = "Unknown Ltd" },
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        Assert.Contains("Select a configured customer.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ShouldReturnValidationProblemWithoutCallingService_WhenRequestIsInvalid()
     {
         var service = new StubInvoiceService();
