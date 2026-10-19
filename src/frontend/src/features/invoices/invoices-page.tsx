@@ -64,7 +64,7 @@ function formatValue(record: WorkRecordDto) {
 function WorkRecordCard({ record }: { record: WorkRecordDto }) {
 	return (
 		<Card
-			className="h-full shadow-sm transition-shadow hover:shadow-md"
+			className="relative h-full shadow-sm transition-shadow hover:shadow-md"
 			role="article"
 			aria-labelledby={`record-${record.id}`}
 		>
@@ -93,15 +93,14 @@ function WorkRecordCard({ record }: { record: WorkRecordDto }) {
 							className="absolute top-9 right-0 z-10 w-40 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
 							role="menu"
 						>
-							<button
-								type="button"
+							<Link
+								to={`/work/${record.id}/edit`}
 								role="menuitem"
-								disabled
-								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50"
+								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
 								<PencilIcon aria-hidden="true" />
 								Edit
-							</button>
+							</Link>
 							<button
 								type="button"
 								role="menuitem"

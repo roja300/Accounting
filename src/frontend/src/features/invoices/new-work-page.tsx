@@ -8,7 +8,7 @@ import {
 import type { Ref } from 'react';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -63,11 +63,17 @@ import {
 } from '@/features/invoices/create-work-record';
 import {
 	createWorkRecord,
+	getWorkRecord,
 	getWorkRecordOptions,
+	updateWorkRecord,
 	type WorkRecordDto,
 } from '@/features/invoices/invoice-api';
 
 const monetaryValuePattern = /^\d*(?:\.\d{0,2})?$/;
+
+function isAbortError(error: unknown) {
+	return error instanceof DOMException && error.name === 'AbortError';
+}
 
 type CreatableComboboxFieldProps = {
 	label: string;
@@ -178,13 +184,87 @@ function CreatableComboboxField({
 	);
 }
 
-export function NewWorkPage() {
+function WorkPageHeader({ isEditing }: { isEditing: boolean }) {
+	return (
+		<div className="mb-6">
+			<p className="mb-2 text-sm font-medium text-muted-foreground">
+				Invoices
+			</p>
+			<h1
+				id="work-title"
+				className="text-3xl font-semibold tracking-tight"
+			>
+				{isEditing ? 'Edit work' : 'New work'}
+			</h1>
+			<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+				{isEditing
+					? 'Update the completed work details for your next invoice.'
+					: 'Record completed work so it is ready for your next invoice.'}
+			</p>
+		</div>
+	);
+}
+
+function EditRecordStatus({
+	loadError,
+	canRetry,
+	onRetry,
+}: {
+	loadError: boolean;
+	canRetry: boolean;
+	onRetry: () => void;
+}) {
+	return (
+		<section
+			aria-labelledby="work-title"
+			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
+		>
+			<div className="mx-auto w-full max-w-3xl">
+				<WorkPageHeader isEditing />
+				<Card
+					className="items-center py-12 text-center shadow-sm"
+					role={loadError ? 'alert' : 'status'}
+				>
+					<CardHeader>
+						<CardTitle>
+							{loadError
+								? 'Work record could not be loaded'
+								: 'Loading work record…'}
+						</CardTitle>
+						{loadError && (
+							<CardDescription>
+								Check your connection and try again.
+							</CardDescription>
+						)}
+					</CardHeader>
+					{loadError && canRetry && (
+						<CardContent>
+							<Button
+								type="button"
+								onClick={onRetry}
+							>
+								Try again
+							</Button>
+						</CardContent>
+					)}
+				</Card>
+			</div>
+		</section>
+	);
+}
+
+export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 	const navigate = useNavigate();
+	const { recordId } = useParams<{ recordId: string }>();
+	const isEditing = mode === 'edit';
 	const [clients, setClients] = useState<string[]>([]);
 	const [projects, setProjects] = useState<string[]>([]);
 	const [submitError, setSubmitError] = useState<string>();
 	const [successDialogOpen, setSuccessDialogOpen] = useState(false);
-	const [createdRecord, setCreatedRecord] = useState<WorkRecordDto>();
+	const [savedRecord, setSavedRecord] = useState<WorkRecordDto>();
+	const [recordLoading, setRecordLoading] = useState(isEditing);
+	const [recordLoadError, setRecordLoadError] = useState(false);
+	const [recordLoadRetry, setRecordLoadRetry] = useState(0);
 	const form = useForm<
 		CreateWorkRecordFormValues,
 		unknown,
@@ -198,6 +278,7 @@ export function NewWorkPage() {
 			project: '',
 		},
 	});
+	const { reset } = form;
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -208,12 +289,7 @@ export function NewWorkPage() {
 				setProjects(options.projects);
 			})
 			.catch((error: unknown) => {
-				if (
-					!(
-						error instanceof DOMException &&
-						error.name === 'AbortError'
-					)
-				) {
+				if (!isAbortError(error)) {
 					setClients([]);
 					setProjects([]);
 				}
@@ -222,15 +298,55 @@ export function NewWorkPage() {
 		return () => controller.abort();
 	}, []);
 
+	useEffect(() => {
+		if (!isEditing) return;
+
+		if (!recordId) {
+			setRecordLoading(false);
+			setRecordLoadError(true);
+			return;
+		}
+
+		const controller = new AbortController();
+		setRecordLoading(true);
+		setRecordLoadError(false);
+
+		getWorkRecord(recordId, controller.signal)
+			.then((record) => {
+				reset({
+					description: record.description,
+					value: record.value,
+					currency: record.currency,
+					comments: record.comments,
+					client: record.client,
+					project: record.project,
+				});
+			})
+			.catch((error: unknown) => {
+				if (!isAbortError(error)) {
+					setRecordLoadError(true);
+				}
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) setRecordLoading(false);
+			});
+
+		return () => controller.abort();
+	}, [isEditing, recordId, recordLoadRetry, reset]);
+
 	async function handleSuccessfulSubmit(workRecord: CreateWorkRecordDto) {
 		setSubmitError(undefined);
 
 		try {
-			setCreatedRecord(await createWorkRecord(workRecord));
+			const saved =
+				isEditing && recordId
+					? await updateWorkRecord(recordId, workRecord)
+					: await createWorkRecord(workRecord);
+			setSavedRecord(saved);
 			setSuccessDialogOpen(true);
 		} catch {
 			setSubmitError(
-				'The work record could not be saved. Please try again.',
+				`The work record could not be ${isEditing ? 'updated' : 'saved'}. Please try again.`,
 			);
 		}
 	}
@@ -243,27 +359,23 @@ export function NewWorkPage() {
 		}
 	}
 
+	if (isEditing && (recordLoading || recordLoadError)) {
+		return (
+			<EditRecordStatus
+				loadError={recordLoadError}
+				canRetry={Boolean(recordId)}
+				onRetry={() => setRecordLoadRetry((count) => count + 1)}
+			/>
+		);
+	}
+
 	return (
 		<section
-			aria-labelledby="new-work-title"
+			aria-labelledby="work-title"
 			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
 		>
 			<div className="mx-auto w-full max-w-3xl">
-				<div className="mb-6">
-					<p className="mb-2 text-sm font-medium text-muted-foreground">
-						Invoices
-					</p>
-					<h1
-						id="new-work-title"
-						className="text-3xl font-semibold tracking-tight"
-					>
-						New work
-					</h1>
-					<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-						Record completed work so it is ready for your next
-						invoice.
-					</p>
-				</div>
+				<WorkPageHeader isEditing={isEditing} />
 
 				<form
 					onSubmit={form.handleSubmit(handleSuccessfulSubmit)}
@@ -605,7 +717,9 @@ export function NewWorkPage() {
 								>
 									{form.formState.isSubmitting
 										? 'Saving…'
-										: 'Save work'}
+										: isEditing
+											? 'Save changes'
+											: 'Save work'}
 								</Button>
 							</div>
 						</CardFooter>
@@ -625,11 +739,13 @@ export function NewWorkPage() {
 								aria-hidden="true"
 							/>
 						</div>
-						<DialogTitle>Work record saved</DialogTitle>
+						<DialogTitle>
+							Work record {isEditing ? 'updated' : 'saved'}
+						</DialogTitle>
 						<DialogDescription>
-							{createdRecord
-								? `“${createdRecord.description}” was added to invoice.`
-								: 'The work record was added to invoice.'}
+							{savedRecord
+								? `“${savedRecord.description}” was ${isEditing ? 'updated' : 'added to invoice'}.`
+								: `The work record was ${isEditing ? 'updated' : 'added to invoice'}.`}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
