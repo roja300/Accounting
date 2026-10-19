@@ -44,6 +44,8 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(invoice => invoice.ProjectId)
             .HasColumnName("project_id")
             .IsRequired();
+        builder.Property(invoice => invoice.GeneratedInvoiceId)
+            .HasColumnName("generated_invoice_id");
         builder.Property(invoice => invoice.CreatedAt)
             .HasColumnName("created_at")
             .HasColumnType("timestamp with time zone")
@@ -57,6 +59,8 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
             .HasDatabaseName("ix_invoices_client_id");
         builder.HasIndex(invoice => invoice.ProjectId)
             .HasDatabaseName("ix_invoices_project_id");
+        builder.HasIndex(invoice => invoice.GeneratedInvoiceId)
+            .HasDatabaseName("ix_invoices_generated_invoice_id");
 
         builder.HasOne(invoice => invoice.Client)
             .WithMany(client => client.Invoices)
@@ -68,5 +72,10 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
             .HasForeignKey(invoice => invoice.ProjectId)
             .OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("fk_invoices_projects_project_id");
+        builder.HasOne(invoice => invoice.GeneratedInvoice)
+            .WithMany(generated => generated.WorkRecords)
+            .HasForeignKey(invoice => invoice.GeneratedInvoiceId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_invoices_generated_invoices_generated_invoice_id");
     }
 }
