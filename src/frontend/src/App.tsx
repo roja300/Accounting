@@ -4,6 +4,7 @@ import { AppNavbar } from '@/components/app-navbar';
 import { InvoicesPage } from '@/features/invoices/invoices-page';
 import { NewWorkPage } from '@/features/invoices/new-work-page.tsx';
 import { PaymentsPage } from '@/features/payments/payments-page.tsx';
+import { ProfilePage } from '@/features/profile/profile-page';
 import { TaxPage } from '@/features/tax/tax-page.tsx';
 
 export function App() {
@@ -12,6 +13,10 @@ export function App() {
 			<AppNavbar />
 			<main className="flex-1">
 				<Routes>
+					<Route
+						path="/profile"
+						element={<ProfilePage />}
+					/>
 					<Route
 						path="/"
 						element={
