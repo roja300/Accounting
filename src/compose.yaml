@@ -27,6 +27,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
+      Https__RedirectEnabled: "false"
       ConnectionStrings__PostgreSQL: "Host=postgresql;Port=5432;Database=${POSTGRES_DB:-accounting};Username=${POSTGRES_USER:-accounting};Password=${POSTGRES_PASSWORD:-accounting_dev_password};Include Error Detail=true"
       Cors__AllowedOrigins__0: "http://localhost:${FRONTEND_PORT:-3000}"
     ports:
