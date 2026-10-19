@@ -1,0 +1,128 @@
+import { expect, test } from '@playwright/test';
+
+const invoice = {
+	id: 'ed652b89-8923-4c68-920c-2e32bbb4150f',
+	invoiceNumber: 'INV-20261019-ABC123',
+	clientId: 'b31f5928-64b0-4dd7-aad1-3a3ca55158ed',
+	clientName: 'Acme Ltd',
+	issueDate: '2026-10-19',
+	dueDate: '2026-11-18',
+	currency: 'GBP',
+	subtotal: 125,
+	notes: 'Payment due within 30 days.',
+	status: 'exported',
+	lines: [
+		{
+			workRecordId: '9eb37a9e-3f15-4213-a9fd-0ba004af2842',
+			description: 'Monthly bookkeeping',
+			project: 'Retainer',
+			value: 125,
+		},
+	],
+	createdAt: '2026-10-19T12:00:00Z',
+};
+
+test('should generate an invoice from selected client work records', async ({
+	page,
+}) => {
+	let request: Record<string, unknown> | undefined;
+	await page.route('**/api/invoices**', async (route) => {
+		const url = new URL(route.request().url());
+		if (url.pathname.endsWith('/options')) {
+			await route.fulfill({
+				json: { clients: ['Acme Ltd'], projects: ['Retainer'] },
+			});
+			return;
+		}
+		await route.fulfill({
+			json: {
+				items: [],
+				page: 1,
+				pageSize: 9,
+				totalItems: 0,
+				totalPages: 0,
+			},
+		});
+	});
+	await page.route('**/api/exported-invoices**', async (route) => {
+		const url = new URL(route.request().url());
+		if (url.pathname.endsWith('/options')) {
+			await route.fulfill({
+				json: {
+					clients: [
+						{ id: invoice.clientId, name: invoice.clientName },
+					],
+					projects: [
+						{
+							id: 'dd0c3ad8-e41c-47f4-9c15-bfb0c5a132b4',
+							name: 'Retainer',
+						},
+					],
+				},
+			});
+			return;
+		}
+		request = route.request().postDataJSON() as Record<string, unknown>;
+		await route.fulfill({ status: 201, json: invoice });
+	});
+
+	await page.goto('/invoices');
+	await page.getByRole('button', { name: 'Generate invoice' }).click();
+	const dialog = page.getByRole('dialog', { name: 'Generate invoice' });
+	await expect(dialog.getByLabel('Client')).toHaveAccessibleDescription(
+		'Only clients with work ready to invoice are shown.',
+	);
+	await dialog.getByLabel('Client').click();
+	await page.getByRole('option', { name: 'Acme Ltd' }).click();
+	await dialog.getByRole('button', { name: 'Generate invoice' }).click();
+
+	await expect(
+		page.getByRole('heading', { name: 'Invoice ready' }),
+	).toBeVisible();
+	expect(request?.clientId).toBe(invoice.clientId);
+	expect(request?.currency).toBe('GBP');
+});
+
+test('should update payment status and confirm before deleting an invoice', async ({
+	page,
+}) => {
+	let updatedStatus = '';
+	let deleteCalls = 0;
+	await page.route('**/api/exported-invoices**', async (route) => {
+		const request = route.request();
+		if (request.method() === 'PATCH') {
+			updatedStatus = (request.postDataJSON() as { status: string })
+				.status;
+			await route.fulfill({
+				json: { ...invoice, status: updatedStatus },
+			});
+			return;
+		}
+		if (request.method() === 'DELETE') {
+			deleteCalls += 1;
+			await route.fulfill({ status: 204 });
+			return;
+		}
+		await route.fulfill({
+			json: {
+				items: [invoice],
+				page: 1,
+				pageSize: 9,
+				totalItems: 1,
+				totalPages: 1,
+			},
+		});
+	});
+
+	await page.goto('/invoices/exported');
+	await expect(page.getByText('INV-20261019-ABC123')).toBeVisible();
+	await page.getByRole('button', { name: 'Payment received' }).click();
+	await expect.poll(() => updatedStatus).toBe('paymentReceived');
+	await page
+		.getByRole('button', { name: 'Delete INV-20261019-ABC123' })
+		.click();
+	const dialog = page.getByRole('dialog', { name: 'Delete this invoice?' });
+	await expect(dialog).toContainText('marked as deleted');
+	await dialog.getByRole('button', { name: 'Delete invoice' }).click();
+	await expect.poll(() => deleteCalls).toBe(1);
+});
