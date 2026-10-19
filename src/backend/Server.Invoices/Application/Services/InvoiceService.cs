@@ -9,6 +9,31 @@ public sealed class InvoiceService(
     IInvoiceContext context,
     TimeProvider timeProvider) : IInvoiceService
 {
+    public async Task<InvoicePageDto> GetPageAsync(
+        InvoiceListQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var persistenceQuery = new InvoiceQuery(
+            ToStartOfDay(query.DateAfter),
+            ToEndOfDay(query.DateBefore),
+            NormalizeOptionalName(query.Client),
+            NormalizeOptionalName(query.Project),
+            NormalizeOptionalText(query.Search),
+            (long)(query.Page - 1) * query.PageSize,
+            query.PageSize);
+        var result = await context.QueryInvoicesAsync(persistenceQuery, cancellationToken);
+        var totalPages = result.TotalItems == 0
+            ? 0
+            : (int)Math.Ceiling((double)result.TotalItems / query.PageSize);
+
+        return new InvoicePageDto(
+            result.Items.Select(Map).ToList(),
+            query.Page,
+            query.PageSize,
+            result.TotalItems,
+            totalPages);
+    }
+
     public async Task<InvoiceResponseDto> CreateAsync(
         InvoiceDto invoice,
         CancellationToken cancellationToken)
@@ -82,6 +107,30 @@ public sealed class InvoiceService(
     }
 
     private static string NormalizeName(string name) => name.Trim().ToUpperInvariant();
+
+    private static string? NormalizeOptionalName(string? name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? null : NormalizeName(name);
+    }
+
+    private static string? NormalizeOptionalText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static DateTimeOffset? ToStartOfDay(DateOnly? date)
+    {
+        return date is null
+            ? null
+            : new DateTimeOffset(date.Value.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+    }
+
+    private static DateTimeOffset? ToEndOfDay(DateOnly? date)
+    {
+        return date is null
+            ? null
+            : new DateTimeOffset(date.Value.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero);
+    }
 
     private static InvoiceResponseDto Map(Invoice invoice)
     {
