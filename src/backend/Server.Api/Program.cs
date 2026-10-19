@@ -7,6 +7,8 @@ using Server.Shared.Modules;
 var builder = WebApplication.CreateBuilder(args);
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+var httpsRedirectEnabled = builder.Configuration.GetValue("Https:RedirectEnabled", true);
+var httpsPort = builder.Configuration.GetValue<int?>("Https:Port");
 
 List<IModule> modules =
 [
@@ -19,6 +21,12 @@ foreach (var module in modules)
 }
 
 builder.Services.AddOpenApi();
+builder.Services.AddHttpsRedirection(options => options.HttpsPort = httpsPort);
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -50,6 +58,16 @@ foreach (var module in modules)
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+if (httpsRedirectEnabled)
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseCors("Frontend");
