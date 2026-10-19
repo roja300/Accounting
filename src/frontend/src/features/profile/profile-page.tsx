@@ -26,6 +26,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import { FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -296,6 +297,7 @@ export function ProfilePage() {
 							<div className="grid gap-5 sm:grid-cols-2">
 								<FormSelect
 									label="Business type"
+									description="Choose the legal structure that should appear on your invoices."
 									registration={businessForm.register(
 										'businessType',
 									)}
@@ -306,6 +308,7 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Legal name"
+									description="Your full personal name or registered company name."
 									registration={businessForm.register(
 										'legalName',
 									)}
@@ -316,12 +319,14 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Trading name (optional)"
+									description="The name customers know your business by, if different."
 									registration={businessForm.register(
 										'tradingName',
 									)}
 								/>
 								<FormInput
 									label="Email"
+									description="Business contact email to show on invoices."
 									type="email"
 									registration={businessForm.register(
 										'email',
@@ -333,6 +338,7 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Phone (optional)"
+									description="Business contact number to show on invoices."
 									type="tel"
 									registration={businessForm.register(
 										'phone',
@@ -340,6 +346,7 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Address line 1"
+									description="Primary business or registered office address."
 									registration={businessForm.register(
 										'addressLine1',
 									)}
@@ -350,12 +357,14 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Address line 2 (optional)"
+									description="Additional address details, such as a building or suite."
 									registration={businessForm.register(
 										'addressLine2',
 									)}
 								/>
 								<FormInput
 									label="Town or city"
+									description="Town or city for the business address."
 									registration={businessForm.register('city')}
 									error={
 										businessForm.formState.errors.city
@@ -364,12 +373,14 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="County (optional)"
+									description="County for the business address, if applicable."
 									registration={businessForm.register(
 										'county',
 									)}
 								/>
 								<FormInput
 									label="Postcode"
+									description="UK postcode for the business address."
 									registration={businessForm.register(
 										'postcode',
 									)}
@@ -380,6 +391,7 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="Company number"
+									description="Companies House number; required for limited companies."
 									registration={businessForm.register(
 										'companyNumber',
 									)}
@@ -390,6 +402,7 @@ export function ProfilePage() {
 								/>
 								<FormInput
 									label="VAT number (if registered)"
+									description="VAT registration number to include on VAT invoices."
 									registration={businessForm.register(
 										'vatNumber',
 									)}
@@ -538,6 +551,7 @@ export function ProfilePage() {
 							<FormInput
 								id="client-name"
 								label="Customer name"
+								description="Person or organisation that will receive the invoice."
 								registration={clientForm.register('name')}
 								error={
 									clientForm.formState.errors.name?.message
@@ -546,6 +560,7 @@ export function ProfilePage() {
 							<FormInput
 								id="client-contact-name"
 								label="Contact name (optional)"
+								description="Main person to contact about invoices."
 								registration={clientForm.register(
 									'contactName',
 								)}
@@ -553,6 +568,7 @@ export function ProfilePage() {
 							<FormInput
 								id="client-email"
 								label="Email"
+								description="Address used to send invoices and billing queries."
 								type="email"
 								registration={clientForm.register('email')}
 								error={
@@ -562,12 +578,14 @@ export function ProfilePage() {
 							<FormInput
 								id="client-phone"
 								label="Phone (optional)"
+								description="Contact number for billing queries."
 								type="tel"
 								registration={clientForm.register('phone')}
 							/>
 							<FormInput
 								id="client-address-line-1"
 								label="Address line 1"
+								description="Primary billing address for this customer."
 								registration={clientForm.register(
 									'addressLine1',
 								)}
@@ -579,6 +597,7 @@ export function ProfilePage() {
 							<FormInput
 								id="client-address-line-2"
 								label="Address line 2 (optional)"
+								description="Additional billing address details."
 								registration={clientForm.register(
 									'addressLine2',
 								)}
@@ -586,6 +605,7 @@ export function ProfilePage() {
 							<FormInput
 								id="client-city"
 								label="Town or city"
+								description="Town or city for the billing address."
 								registration={clientForm.register('city')}
 								error={
 									clientForm.formState.errors.city?.message
@@ -594,11 +614,13 @@ export function ProfilePage() {
 							<FormInput
 								id="client-county"
 								label="County (optional)"
+								description="County for the billing address, if applicable."
 								registration={clientForm.register('county')}
 							/>
 							<FormInput
 								id="client-postcode"
 								label="Postcode"
+								description="Postcode for the billing address."
 								registration={clientForm.register('postcode')}
 								error={
 									clientForm.formState.errors.postcode
@@ -643,30 +665,43 @@ type Registration = ReturnType<ReturnType<typeof useForm>['register']>;
 function FormInput({
 	id,
 	label,
+	description,
 	registration,
 	error,
 	type = 'text',
 }: {
 	id?: string;
 	label: string;
+	description?: string;
 	registration: Registration;
 	error?: string;
 	type?: string;
 }) {
 	const inputId = id ?? registration.name;
+	const descriptionId = `${inputId}-description`;
+	const errorId = `${inputId}-error`;
 	return (
 		<div className="grid gap-2">
 			<Label htmlFor={inputId}>{label}</Label>
+			{description && (
+				<FieldDescription id={descriptionId}>
+					{description}
+				</FieldDescription>
+			)}
 			<Input
 				id={inputId}
 				type={type}
 				{...registration}
 				aria-invalid={Boolean(error)}
-				aria-describedby={error ? `${inputId}-error` : undefined}
+				aria-describedby={
+					[description && descriptionId, error && errorId]
+						.filter(Boolean)
+						.join(' ') || undefined
+				}
 			/>
 			{error && (
 				<p
-					id={`${inputId}-error`}
+					id={errorId}
 					className="text-sm text-destructive"
 				>
 					{error}
@@ -678,19 +713,28 @@ function FormInput({
 
 function FormSelect({
 	label,
+	description,
 	registration,
 	options,
 }: {
 	label: string;
+	description?: string;
 	registration: Registration;
 	options: ReadonlyArray<readonly [string, string]>;
 }) {
+	const descriptionId = `${registration.name}-description`;
 	return (
 		<div className="grid gap-2">
 			<Label htmlFor={registration.name}>{label}</Label>
+			{description && (
+				<FieldDescription id={descriptionId}>
+					{description}
+				</FieldDescription>
+			)}
 			<select
 				id={registration.name}
 				{...registration}
+				aria-describedby={description ? descriptionId : undefined}
 				className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 			>
 				{options.map(([value, text]) => (

@@ -61,6 +61,9 @@ test('should configure business information and create a customer', async ({
 	await expect(
 		page.getByRole('heading', { name: 'Business profile' }),
 	).toBeVisible();
+	await expect(page.getByLabel('Legal name')).toHaveAccessibleDescription(
+		'Your full personal name or registered company name.',
+	);
 	await page.getByLabel('Legal name').fill('Example Freelancer');
 	await page.getByLabel('Email').first().fill('owner@example.test');
 	await page.getByLabel('Address line 1').first().fill('1 High Street');
@@ -72,6 +75,11 @@ test('should configure business information and create a customer', async ({
 
 	await page.getByRole('button', { name: 'Add customer' }).click();
 	const customerDialog = page.getByRole('dialog', { name: 'Add customer' });
+	await expect(
+		customerDialog.getByLabel('Customer name'),
+	).toHaveAccessibleDescription(
+		'Person or organisation that will receive the invoice.',
+	);
 	await customerDialog.getByLabel('Customer name').fill('Acme Ltd');
 	await customerDialog.getByLabel('Email').fill('accounts@acme.test');
 	await customerDialog.getByLabel('Address line 1').fill('2 Market Road');
