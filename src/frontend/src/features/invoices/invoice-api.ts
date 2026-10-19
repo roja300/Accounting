@@ -1,7 +1,7 @@
 export interface CreateWorkRecordDto {
 	description: string;
 	value: number;
-	currency: string;
+	currency: 'GBP' | 'EUR' | 'USD';
 	comments?: string;
 	client: string;
 	project: string;
@@ -44,6 +44,26 @@ export function createWorkRecord(
 ): Promise<WorkRecordDto> {
 	return request<WorkRecordDto>(invoicesPath, {
 		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(workRecord),
+		signal,
+	});
+}
+
+export function getWorkRecord(
+	id: string,
+	signal?: AbortSignal,
+): Promise<WorkRecordDto> {
+	return request<WorkRecordDto>(`${invoicesPath}/${id}`, { signal });
+}
+
+export function updateWorkRecord(
+	id: string,
+	workRecord: CreateWorkRecordDto,
+	signal?: AbortSignal,
+): Promise<WorkRecordDto> {
+	return request<WorkRecordDto>(`${invoicesPath}/${id}`, {
+		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(workRecord),
 		signal,
