@@ -7,7 +7,7 @@ import {
 	UsersIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,13 @@ import {
 import { FieldDescription } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import {
 	Table,
 	TableBody,
@@ -295,16 +302,26 @@ export function ProfilePage() {
 							noValidate
 						>
 							<div className="grid gap-5 sm:grid-cols-2">
-								<FormSelect
-									label="Business type"
-									description="Choose the legal structure that should appear on your invoices."
-									registration={businessForm.register(
-										'businessType',
+								<Controller
+									name="businessType"
+									control={businessForm.control}
+									render={({ field }) => (
+										<FormSelect
+											label="Business type"
+											description="Choose the legal structure that should appear on your invoices."
+											name={field.name}
+											value={field.value}
+											onChange={field.onChange}
+											onBlur={field.onBlur}
+											options={[
+												['soleTrader', 'Sole trader'],
+												[
+													'limitedCompany',
+													'Limited company',
+												],
+											]}
+										/>
 									)}
-									options={[
-										['soleTrader', 'Sole trader'],
-										['limitedCompany', 'Limited company'],
-									]}
 								/>
 								<FormInput
 									label="Legal name"
@@ -714,38 +731,61 @@ function FormInput({
 function FormSelect({
 	label,
 	description,
-	registration,
+	name,
+	value,
+	onChange,
+	onBlur,
 	options,
 }: {
 	label: string;
 	description?: string;
-	registration: Registration;
-	options: ReadonlyArray<readonly [string, string]>;
+	name: string;
+	value: BusinessProfileDto['businessType'];
+	onChange: (value: BusinessProfileDto['businessType']) => void;
+	onBlur: () => void;
+	options: ReadonlyArray<
+		readonly [BusinessProfileDto['businessType'], string]
+	>;
 }) {
-	const descriptionId = `${registration.name}-description`;
+	const descriptionId = `${name}-description`;
+	const items = options.map(([optionValue, optionLabel]) => ({
+		label: optionLabel,
+		value: optionValue,
+	}));
 	return (
 		<div className="grid gap-2">
-			<Label htmlFor={registration.name}>{label}</Label>
+			<Label htmlFor={name}>{label}</Label>
 			{description && (
 				<FieldDescription id={descriptionId}>
 					{description}
 				</FieldDescription>
 			)}
-			<select
-				id={registration.name}
-				{...registration}
-				aria-describedby={description ? descriptionId : undefined}
-				className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+			<Select
+				items={items}
+				name={name}
+				value={value}
+				onValueChange={(nextValue) => nextValue && onChange(nextValue)}
 			>
-				{options.map(([value, text]) => (
-					<option
-						key={value}
-						value={value}
-					>
-						{text}
-					</option>
-				))}
-			</select>
+				<SelectTrigger
+					id={name}
+					className="w-full"
+					onBlur={onBlur}
+					aria-required="true"
+					aria-describedby={description ? descriptionId : undefined}
+				>
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map(([optionValue, optionLabel]) => (
+						<SelectItem
+							key={optionValue}
+							value={optionValue}
+						>
+							{optionLabel}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 		</div>
 	);
 }

@@ -64,6 +64,12 @@ test('should configure business information and create a customer', async ({
 	await expect(page.getByLabel('Legal name')).toHaveAccessibleDescription(
 		'Your full personal name or registered company name.',
 	);
+	const businessType = page.getByRole('combobox', { name: 'Business type' });
+	await businessType.click();
+	await page.getByRole('option', { name: 'Limited company' }).click();
+	await expect(businessType).toContainText('Limited company');
+	await businessType.click();
+	await page.getByRole('option', { name: 'Sole trader' }).click();
 	await page.getByLabel('Legal name').fill('Example Freelancer');
 	await page.getByLabel('Email').first().fill('owner@example.test');
 	await page.getByLabel('Address line 1').first().fill('1 High Street');
