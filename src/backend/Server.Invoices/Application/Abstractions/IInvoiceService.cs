@@ -10,6 +10,11 @@ public interface IInvoiceService
 
     Task<InvoiceResponseDto> CreateAsync(InvoiceDto invoice, CancellationToken cancellationToken);
 
+    Task<InvoiceResponseDto?> UpdateAsync(
+        Guid id,
+        InvoiceDto invoice,
+        CancellationToken cancellationToken);
+
     Task<InvoiceResponseDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<InvoiceOptionsDto> GetOptionsAsync(CancellationToken cancellationToken);
