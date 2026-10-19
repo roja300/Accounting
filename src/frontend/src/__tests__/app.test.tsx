@@ -28,14 +28,14 @@ test('should render the Tax page with its navigation item active', () => {
 	);
 });
 
-test('should navigate from Tax to Invoices', async () => {
+test('should navigate from Tax to exported invoices', async () => {
 	const user = userEvent.setup();
 	renderApp('/tax');
 
 	await user.click(screen.getByRole('link', { name: 'Invoices' }));
 
 	expect(
-		screen.getByRole('region', { name: 'Invoices page' }),
+		screen.getByRole('region', { name: 'Exported invoices page' }),
 	).toBeInTheDocument();
 	expect(screen.getByRole('link', { name: 'Invoices' })).toHaveAttribute(
 		'aria-current',

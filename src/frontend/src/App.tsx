@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppNavbar } from '@/components/app-navbar';
+import { ExportedInvoicesPage } from '@/features/invoices/exported-invoices-page';
 import { InvoicesPage } from '@/features/invoices/invoices-page';
 import { NewWorkPage } from '@/features/invoices/new-work-page.tsx';
 import { PaymentsPage } from '@/features/payments/payments-page.tsx';
@@ -41,6 +42,10 @@ export function App() {
 					<Route
 						path="/work/:recordId/edit"
 						element={<NewWorkPage mode="edit" />}
+					/>
+					<Route
+						path="/invoices/exported"
+						element={<ExportedInvoicesPage />}
 					/>
 					<Route
 						path="/invoices"
