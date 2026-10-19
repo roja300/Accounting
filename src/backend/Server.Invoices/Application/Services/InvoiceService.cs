@@ -41,7 +41,7 @@ public sealed class InvoiceService(
         var now = timeProvider.GetUtcNow();
         var clientName = invoice.Client.Trim();
         var projectName = invoice.Project.Trim();
-        var client = await GetOrCreateClientAsync(clientName, now, cancellationToken);
+        var client = await GetClientAsync(clientName, cancellationToken);
         var project = await GetOrCreateProjectAsync(projectName, now, cancellationToken);
 
         var entity = new Invoice
@@ -79,7 +79,7 @@ public sealed class InvoiceService(
         var now = timeProvider.GetUtcNow();
         var clientName = invoice.Client.Trim();
         var projectName = invoice.Project.Trim();
-        var client = await GetOrCreateClientAsync(clientName, now, cancellationToken);
+        var client = await GetClientAsync(clientName, cancellationToken);
         var project = await GetOrCreateProjectAsync(projectName, now, cancellationToken);
 
         entity.Description = invoice.Description.Trim();
@@ -112,13 +112,12 @@ public sealed class InvoiceService(
         return new InvoiceOptionsDto(clients, projects);
     }
 
-    private async Task<Client> GetOrCreateClientAsync(
+    private async Task<Client> GetClientAsync(
         string name,
-        DateTimeOffset now,
         CancellationToken cancellationToken)
     {
         return await context.FindClientAsync(NormalizeName(name), cancellationToken)
-            ?? CreateClient(name, now);
+            ?? throw new ClientNotConfiguredException();
     }
 
     private async Task<Project> GetOrCreateProjectAsync(
@@ -128,18 +127,6 @@ public sealed class InvoiceService(
     {
         return await context.FindProjectAsync(NormalizeName(name), cancellationToken)
             ?? CreateProject(name, now);
-    }
-
-    private static Client CreateClient(string name, DateTimeOffset now)
-    {
-        return new Client
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            NormalizedName = NormalizeName(name),
-            CreatedAt = now,
-            UpdatedAt = now
-        };
     }
 
     private static Project CreateProject(string name, DateTimeOffset now)
@@ -193,3 +180,5 @@ public sealed class InvoiceService(
             invoice.CreatedAt);
     }
 }
+
+public sealed class ClientNotConfiguredException : Exception;

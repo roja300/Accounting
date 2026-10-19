@@ -1,3 +1,4 @@
+import { CircleUserRoundIcon } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
@@ -43,6 +44,23 @@ export function AppNavbar() {
 						</NavLink>
 					))}
 				</nav>
+				<NavLink
+					to="/profile"
+					aria-label="Business profile"
+					className={({ isActive }) =>
+						cn(
+							'ml-auto flex size-9 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+							isActive
+								? 'bg-primary text-primary-foreground'
+								: 'text-muted-foreground hover:bg-accent hover:text-foreground',
+						)
+					}
+				>
+					<CircleUserRoundIcon
+						className="size-6"
+						aria-hidden="true"
+					/>
+				</NavLink>
 			</div>
 		</header>
 	);

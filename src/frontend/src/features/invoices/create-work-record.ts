@@ -47,7 +47,7 @@ export const createWorkRecordSchema = z.object({
 	client: z
 		.string()
 		.trim()
-		.min(1, 'Select or enter a client.')
+		.min(1, 'Select a customer.')
 		.max(
 			RELATED_RECORD_MAX_LENGTH,
 			`Client name must be ${RELATED_RECORD_MAX_LENGTH} characters or fewer.`,

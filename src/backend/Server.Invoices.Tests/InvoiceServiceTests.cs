@@ -49,28 +49,17 @@ public class InvoiceServiceTests
     }
 
     [Fact]
-    public async Task ShouldPersistInvoiceWithNewClientAndProject_WhenNamesDoNotExist()
+    public async Task ShouldRejectInvoice_WhenClientDoesNotExist()
     {
         var context = new MockInvoiceContext();
         var service = new InvoiceService(context, new FixedTimeProvider(Now));
         var request = CreateInvoice();
 
-        var response = await service.CreateAsync(request, CancellationToken.None);
+        await Assert.ThrowsAsync<ClientNotConfiguredException>(
+            () => service.CreateAsync(request, CancellationToken.None));
 
-        var saved = Assert.IsType<Invoice>(context.AddedInvoice);
-        Assert.NotEqual(Guid.Empty, saved.Id);
-        Assert.Equal("Monthly bookkeeping", saved.Description);
-        Assert.Equal(125.50m, saved.Value);
-        Assert.Equal("GBP", saved.Currency);
-        Assert.Equal("Completed October records.", saved.Comments);
-        Assert.Equal("Acme Ltd", saved.Client.Name);
-        Assert.Equal("ACME LTD", saved.Client.NormalizedName);
-        Assert.Equal("Retainer", saved.Project.Name);
-        Assert.Equal("RETAINER", saved.Project.NormalizedName);
-        Assert.Equal(Now, saved.CreatedAt);
-        Assert.Equal(Now, saved.UpdatedAt);
-        Assert.Equal(1, context.SaveChangesCalls);
-        Assert.Equal(saved.Id, response.Id);
+        Assert.Null(context.AddedInvoice);
+        Assert.Equal(0, context.SaveChangesCalls);
     }
 
     [Fact]
@@ -102,7 +91,7 @@ public class InvoiceServiceTests
     [Fact]
     public async Task ShouldPersistEmptyComments_WhenCommentsAreOmitted()
     {
-        var context = new MockInvoiceContext();
+        var context = new MockInvoiceContext { Client = CreateClient() };
         var service = new InvoiceService(context, new FixedTimeProvider(Now));
         var request = CreateInvoice() with { Comments = null };
 
@@ -117,7 +106,16 @@ public class InvoiceServiceTests
     public async Task ShouldUpdateInvoiceAndRelationships_WhenInvoiceExists()
     {
         var invoice = CreateInvoiceEntity();
-        var context = new MockInvoiceContext { StoredInvoice = invoice };
+        var context = new MockInvoiceContext
+        {
+            StoredInvoice = invoice,
+            Client = new Client
+            {
+                Id = Guid.NewGuid(),
+                Name = "Northwind Ltd",
+                NormalizedName = "NORTHWIND LTD"
+            }
+        };
         var service = new InvoiceService(context, new FixedTimeProvider(Now));
         var request = new InvoiceDto(
             " Year-end accounts ",

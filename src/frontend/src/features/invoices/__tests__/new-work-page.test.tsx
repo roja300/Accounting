@@ -14,11 +14,13 @@ test('should show validation messages and not submit an empty work record', asyn
 	const fetchMock = mockInvoiceApi();
 	renderPage();
 
-	await user.click(screen.getByRole('button', { name: 'Save work' }));
+	const saveButton = screen.getByRole('button', { name: 'Save work' });
+	await vi.waitFor(() => expect(saveButton).toBeEnabled());
+	await user.click(saveButton);
 
 	expect(screen.getByText('Enter a description.')).toBeInTheDocument();
 	expect(screen.getByText('Select a currency.')).toBeInTheDocument();
-	expect(screen.getByText('Select or enter a client.')).toBeInTheDocument();
+	expect(screen.getByText('Select a customer.')).toBeInTheDocument();
 	expect(screen.getByText('Select or enter a project.')).toBeInTheDocument();
 	expect(screen.getByText('Enter a value.')).toBeInTheDocument();
 	expect(fetchMock).not.toHaveBeenCalledWith(
@@ -27,7 +29,7 @@ test('should show validation messages and not submit an empty work record', asyn
 	);
 });
 
-test('should submit the typed dto and navigate after confirming success', async () => {
+test('should submit a configured customer and navigate after confirming success', async () => {
 	const user = userEvent.setup();
 	const fetchMock = mockInvoiceApi();
 	renderPage();
@@ -44,14 +46,8 @@ test('should submit the typed dto and navigate after confirming success', async 
 	await user.click(
 		screen.getByRole('option', { name: 'Pound sterling (GBP)' }),
 	);
-	await user.type(
-		screen.getByRole('combobox', { name: 'Client' }),
-		'New Client',
-	);
-	expect(
-		screen.getByText('A new client named “New Client” will be created.'),
-	).toBeInTheDocument();
-	await user.keyboard('{Escape}');
+	await user.click(await screen.findByRole('combobox', { name: 'Customer' }));
+	await user.click(screen.getByRole('option', { name: 'Acme Ltd' }));
 	await user.type(
 		screen.getByRole('combobox', { name: 'Project' }),
 		'Retainer',
@@ -70,7 +66,7 @@ test('should submit the typed dto and navigate after confirming success', async 
 		description: 'Monthly bookkeeping',
 		value: 125.5,
 		currency: 'GBP',
-		client: 'New Client',
+		client: 'Acme Ltd',
 		project: 'Retainer',
 	});
 
@@ -78,6 +74,19 @@ test('should submit the typed dto and navigate after confirming success', async 
 		screen.getByRole('button', { name: 'Return to invoices' }),
 	);
 	expect(screen.getByText('Invoices destination')).toBeInTheDocument();
+});
+
+test('should prevent creating work when no customer is configured', async () => {
+	mockInvoiceApi([]);
+	renderPage();
+
+	expect(
+		await screen.findByText('Add a customer before recording work'),
+	).toBeInTheDocument();
+	expect(screen.getByRole('button', { name: 'Save work' })).toBeDisabled();
+	expect(
+		screen.getByRole('button', { name: 'Open business profile' }),
+	).toHaveAttribute('href', '/profile');
 });
 
 function renderPage() {
@@ -97,15 +106,12 @@ function renderPage() {
 	);
 }
 
-function mockInvoiceApi() {
+function mockInvoiceApi(clients: string[] = ['Acme Ltd']) {
 	const fetchMock = vi.fn(
 		(input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
 			if (String(input) === '/api/invoices/options') {
 				return Promise.resolve(
-					jsonResponse({
-						clients: ['Acme Ltd'],
-						projects: ['Website refresh'],
-					}),
+					jsonResponse({ clients, projects: ['Website refresh'] }),
 				);
 			}
 

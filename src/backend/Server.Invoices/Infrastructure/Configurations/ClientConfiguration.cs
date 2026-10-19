@@ -22,6 +22,38 @@ public sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
             .HasColumnName("normalized_name")
             .HasMaxLength(100)
             .IsRequired();
+        builder.Property(client => client.ContactName)
+            .HasColumnName("contact_name")
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(client => client.Email)
+            .HasColumnName("email")
+            .HasMaxLength(254)
+            .IsRequired();
+        builder.Property(client => client.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(30)
+            .IsRequired();
+        builder.Property(client => client.AddressLine1)
+            .HasColumnName("address_line_1")
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(client => client.AddressLine2)
+            .HasColumnName("address_line_2")
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(client => client.City)
+            .HasColumnName("city")
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(client => client.County)
+            .HasColumnName("county")
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(client => client.Postcode)
+            .HasColumnName("postcode")
+            .HasMaxLength(10)
+            .IsRequired();
         builder.Property(client => client.CreatedAt)
             .HasColumnName("created_at")
             .HasColumnType("timestamp with time zone")

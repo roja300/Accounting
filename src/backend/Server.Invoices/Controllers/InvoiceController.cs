@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
+using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
 
 namespace Server.Invoices.Controllers;
@@ -71,8 +72,15 @@ public sealed class InvoiceController(
             });
         }
 
-        var created = await invoiceService.CreateAsync(invoice, cancellationToken);
-        return CreatedAtRoute(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await invoiceService.CreateAsync(invoice, cancellationToken);
+            return CreatedAtRoute(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (ClientNotConfiguredException)
+        {
+            return ClientNotConfigured();
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -95,7 +103,26 @@ public sealed class InvoiceController(
             });
         }
 
-        var updated = await invoiceService.UpdateAsync(id, invoice, cancellationToken);
-        return updated is null ? NotFound() : Ok(updated);
+        try
+        {
+            var updated = await invoiceService.UpdateAsync(id, invoice, cancellationToken);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+        catch (ClientNotConfiguredException)
+        {
+            return ClientNotConfigured();
+        }
+    }
+
+    private ActionResult ClientNotConfigured()
+    {
+        return ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>
+        {
+            ["client"] = ["Select a configured customer."]
+        })
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "One or more validation errors occurred."
+        });
     }
 }

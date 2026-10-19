@@ -77,7 +77,7 @@ function isAbortError(error: unknown) {
 
 type CreatableComboboxFieldProps = {
 	label: string;
-	name: 'client' | 'project';
+	name: 'project';
 	placeholder: string;
 	options: readonly string[];
 	value: string;
@@ -184,6 +184,96 @@ function CreatableComboboxField({
 	);
 }
 
+function CustomerSelectField({
+	options,
+	value,
+	onChange,
+	onBlur,
+	invalid,
+	error,
+}: {
+	options: readonly string[];
+	value: string;
+	onChange: (value: string) => void;
+	onBlur: () => void;
+	invalid: boolean;
+	error?: string;
+}) {
+	const customerOptions = options.map((option) => ({
+		label: option,
+		value: option,
+	}));
+
+	return (
+		<Field data-invalid={invalid}>
+			<FieldLabel htmlFor="client">Customer</FieldLabel>
+			<FieldDescription id="client-description">
+				Choose a customer configured in your business profile.
+			</FieldDescription>
+			<Select
+				items={customerOptions}
+				name="client"
+				value={value || null}
+				required
+				onValueChange={(nextValue) => nextValue && onChange(nextValue)}
+			>
+				<SelectTrigger
+					id="client"
+					className="w-full"
+					onBlur={onBlur}
+					aria-invalid={invalid}
+					aria-describedby={`client-description${invalid ? ' client-error' : ''}`}
+				>
+					<SelectValue placeholder="Select a customer" />
+				</SelectTrigger>
+				<SelectContent>
+					{options.map((option) => (
+						<SelectItem
+							key={option}
+							value={option}
+						>
+							{option}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+			{invalid && <FieldError id="client-error">{error}</FieldError>}
+		</Field>
+	);
+}
+
+function CustomerRequirementNotice({ loadError }: { loadError: boolean }) {
+	const title = loadError
+		? 'Customers could not be loaded'
+		: 'Add a customer before recording work';
+	const description = loadError
+		? 'Check your connection and try again.'
+		: 'Work records must be assigned to a customer from your business profile.';
+
+	return (
+		<Card
+			className="mb-6 border-amber-500/50 bg-amber-500/5"
+			role="alert"
+		>
+			<CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<p className="font-medium">{title}</p>
+					<p className="text-sm text-muted-foreground">
+						{description}
+					</p>
+				</div>
+				<Button
+					nativeButton={false}
+					render={<Link to="/profile" />}
+					variant="outline"
+				>
+					Open business profile
+				</Button>
+			</CardContent>
+		</Card>
+	);
+}
+
 function WorkPageHeader({ isEditing }: { isEditing: boolean }) {
 	return (
 		<div className="mb-6">
@@ -259,6 +349,8 @@ export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 	const isEditing = mode === 'edit';
 	const [clients, setClients] = useState<string[]>([]);
 	const [projects, setProjects] = useState<string[]>([]);
+	const [optionsLoaded, setOptionsLoaded] = useState(false);
+	const [optionsLoadError, setOptionsLoadError] = useState(false);
 	const [submitError, setSubmitError] = useState<string>();
 	const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 	const [savedRecord, setSavedRecord] = useState<WorkRecordDto>();
@@ -287,12 +379,17 @@ export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 			.then((options) => {
 				setClients(options.clients);
 				setProjects(options.projects);
+				setOptionsLoadError(false);
 			})
 			.catch((error: unknown) => {
 				if (!isAbortError(error)) {
 					setClients([]);
 					setProjects([]);
+					setOptionsLoadError(true);
 				}
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) setOptionsLoaded(true);
 			});
 
 		return () => controller.abort();
@@ -376,6 +473,9 @@ export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 		>
 			<div className="mx-auto w-full max-w-3xl">
 				<WorkPageHeader isEditing={isEditing} />
+				{optionsLoaded && clients.length === 0 && (
+					<CustomerRequirementNotice loadError={optionsLoadError} />
+				)}
 
 				<form
 					onSubmit={form.handleSubmit(handleSuccessfulSubmit)}
@@ -611,15 +711,11 @@ export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 										name="client"
 										control={form.control}
 										render={({ field, fieldState }) => (
-											<CreatableComboboxField
-												label="Client"
-												name="client"
-												placeholder="Select or enter a client"
+											<CustomerSelectField
 												options={clients}
 												value={field.value}
 												onChange={field.onChange}
 												onBlur={field.onBlur}
-												inputRef={field.ref}
 												invalid={fieldState.invalid}
 												error={
 													fieldState.error?.message
@@ -713,7 +809,11 @@ export function NewWorkPage({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
 								</Button>
 								<Button
 									type="submit"
-									disabled={form.formState.isSubmitting}
+									disabled={
+										form.formState.isSubmitting ||
+										!optionsLoaded ||
+										clients.length === 0
+									}
 								>
 									{form.formState.isSubmitting
 										? 'Saving…'

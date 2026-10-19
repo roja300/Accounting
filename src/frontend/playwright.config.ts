@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-	testDir: '../../e2e/tests',
+	testDir: './e2e/tests',
 	use: {
 		// biome-ignore lint/style/useNamingConvention: Playwright requires this option name.
 		baseURL: 'http://127.0.0.1:5173',

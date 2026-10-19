@@ -14,6 +14,8 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
 
     public DbSet<Project> Projects => Set<Project>();
 
+    public DbSet<BusinessProfile> BusinessProfiles => Set<BusinessProfile>();
+
     public async Task<InvoiceQueryResult> QueryInvoicesAsync(
         InvoiceQuery query,
         CancellationToken cancellationToken)
