@@ -32,6 +32,7 @@ public sealed class InvoicesModule : IModule
         services.AddScoped<IInvoiceContext>(provider =>
             provider.GetRequiredService<InvoiceContext>());
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<InvoiceValidator>();
         services.AddScoped<InvoiceListQueryValidator>();
         services.AddSingleton(TimeProvider.System);

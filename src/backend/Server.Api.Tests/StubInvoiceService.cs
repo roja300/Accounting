@@ -1,5 +1,6 @@
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
+using Server.Invoices.Application.Services;
 
 namespace Server.Api.Tests;
 
@@ -15,6 +16,8 @@ internal sealed class StubInvoiceService : IInvoiceService
     public Guid? UpdatedInvoiceId { get; private set; }
 
     public InvoiceListQueryDto? ListQuery { get; private set; }
+
+    public bool RejectClient { get; set; }
 
     public Task<InvoicePageDto> GetPageAsync(
         InvoiceListQueryDto query,
@@ -35,6 +38,11 @@ internal sealed class StubInvoiceService : IInvoiceService
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (RejectClient)
+        {
+            throw new ClientNotConfiguredException();
+        }
+
         CreatedInvoice = invoice;
         return Task.FromResult(ToResponse(invoice));
     }
