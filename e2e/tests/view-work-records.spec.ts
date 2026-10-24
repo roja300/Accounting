@@ -17,6 +17,7 @@ const records = Array.from({ length: 10 }, (_, index) => ({
 }));
 
 async function mockInvoiceApi(page: Page) {
+	const deletedRecordIds = new Set<string>();
 	await page.route('**/api/invoices/options', (route) =>
 		route.fulfill({
 			json: {
@@ -29,19 +30,33 @@ async function mockInvoiceApi(page: Page) {
 		const url = new URL(route.request().url());
 		const requestedPage = Number(url.searchParams.get('page') ?? '1');
 		const search = url.searchParams.get('search');
+		const visibleRecords = records.filter(
+			(record) => !deletedRecordIds.has(record.id),
+		);
 		const filtered = search
-			? [records[0]]
-			: records.slice((requestedPage - 1) * 9, requestedPage * 9);
+			? visibleRecords
+					.filter((record) =>
+						record.description
+							.toLowerCase()
+							.includes(search.toLowerCase()),
+					)
+					.slice(0, 1)
+			: visibleRecords.slice((requestedPage - 1) * 9, requestedPage * 9);
 
 		return route.fulfill({
 			json: {
 				items: filtered,
 				page: requestedPage,
 				pageSize: 9,
-				totalItems: search ? 1 : records.length,
-				totalPages: search ? 1 : 2,
+				totalItems: search ? filtered.length : visibleRecords.length,
+				totalPages: search ? 1 : Math.ceil(visibleRecords.length / 9),
 			},
 		});
+	});
+	await page.route('**/api/invoices/*', (route) => {
+		if (route.request().method() !== 'DELETE') return route.fallback();
+		deletedRecordIds.add(route.request().url().split('/').at(-1) ?? '');
+		return route.fulfill({ status: 204 });
 	});
 }
 
@@ -80,7 +95,7 @@ test('should send all selected filters when applying them', async ({
 	await expect(page.getByText('1-1 of 1 work records')).toBeVisible();
 });
 
-test('should offer edit while keeping delete disabled', async ({ page }) => {
+test('should delete a work record after confirmation', async ({ page }) => {
 	await mockInvoiceApi(page);
 	await page.goto('/invoices');
 
@@ -95,5 +110,30 @@ test('should offer edit while keeping delete disabled', async ({ page }) => {
 		'href',
 		'/work/record-1/edit',
 	);
-	await expect(menuItems.nth(1)).toBeDisabled();
+	await menuItems.nth(1).click();
+	await expect(
+		page.getByRole('heading', { name: 'Delete work record?' }),
+	).toBeVisible();
+	await expect(
+		page.getByText(
+			'“Monthly bookkeeping 1” will be hidden from your work records.',
+		),
+	).toBeVisible();
+
+	const deleteRequest = page.waitForRequest(
+		(request) =>
+			request.method() === 'DELETE' &&
+			request.url().endsWith('/api/invoices/record-1'),
+	);
+	await page.getByRole('button', { name: 'Delete work record' }).click();
+	await deleteRequest;
+
+	await expect(
+		page.getByText('“Monthly bookkeeping 1” was deleted.'),
+	).toBeVisible();
+	await expect(page.getByRole('article')).toHaveCount(9);
+	await expect(page.getByText('1-9 of 9 work records')).toBeVisible();
+	await expect(
+		page.getByText('Monthly bookkeeping 1', { exact: true }),
+	).toHaveCount(0);
 });

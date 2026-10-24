@@ -70,6 +70,13 @@ export function updateWorkRecord(
 	});
 }
 
+export async function deleteWorkRecord(id: string): Promise<void> {
+	const response = await fetch(`${invoicesPath}/${id}`, { method: 'DELETE' });
+	if (!response.ok) {
+		throw new Error(`Request failed with status ${response.status}.`);
+	}
+}
+
 export function getWorkRecordOptions(
 	signal?: AbortSignal,
 ): Promise<WorkRecordOptionsDto> {
