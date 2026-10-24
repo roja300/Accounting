@@ -105,6 +105,29 @@ public sealed class InvoiceService(
         return invoice is null ? null : Map(invoice);
     }
 
+    public async Task<InvoiceResponseDto?> UpdateStatusAsync(
+        Guid id,
+        string status,
+        CancellationToken cancellationToken)
+    {
+        if (!WorkRecordStatuses.All.Contains(status))
+        {
+            throw new ArgumentOutOfRangeException(nameof(status), status, "Status is not supported.");
+        }
+
+        var invoice = await context.GetInvoiceForUpdateAsync(id, cancellationToken);
+        if (invoice is null)
+        {
+            return null;
+        }
+
+        invoice.Status = status;
+        invoice.UpdatedAt = timeProvider.GetUtcNow();
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Map(invoice);
+    }
+
     public async Task<InvoiceOptionsDto> GetOptionsAsync(CancellationToken cancellationToken)
     {
         var clients = await context.GetClientNamesAsync(cancellationToken);

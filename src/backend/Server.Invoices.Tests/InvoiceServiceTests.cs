@@ -159,6 +159,54 @@ public class InvoiceServiceTests
         Assert.Equal(0, context.SaveChangesCalls);
     }
 
+    [Fact]
+    public async Task ShouldUpdateStatusAndTimestamp_WhenInvoiceExists()
+    {
+        var invoice = CreateInvoiceEntity();
+        var context = new MockInvoiceContext { StoredInvoice = invoice };
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+
+        var response = await service.UpdateStatusAsync(
+            invoice.Id,
+            WorkRecordStatuses.Deleted,
+            CancellationToken.None);
+
+        Assert.NotNull(response);
+        Assert.Equal(WorkRecordStatuses.Deleted, invoice.Status);
+        Assert.Equal(Now, invoice.UpdatedAt);
+        Assert.Equal(1, context.SaveChangesCalls);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNullWithoutSaving_WhenStatusUpdatedInvoiceDoesNotExist()
+    {
+        var context = new MockInvoiceContext();
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+
+        var response = await service.UpdateStatusAsync(
+            Guid.NewGuid(),
+            WorkRecordStatuses.Deleted,
+            CancellationToken.None);
+
+        Assert.Null(response);
+        Assert.Equal(0, context.SaveChangesCalls);
+    }
+
+    [Fact]
+    public async Task ShouldRejectUnsupportedStatus()
+    {
+        var context = new MockInvoiceContext();
+        var service = new InvoiceService(context, new FixedTimeProvider(Now));
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => service.UpdateStatusAsync(
+                Guid.NewGuid(),
+                "archived",
+                CancellationToken.None));
+
+        Assert.Equal(0, context.SaveChangesCalls);
+    }
+
     private static InvoiceDto CreateInvoice()
     {
         return new InvoiceDto(
