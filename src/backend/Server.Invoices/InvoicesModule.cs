@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QuestPDF.Infrastructure;
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
@@ -17,6 +18,7 @@ public sealed class InvoicesModule : IModule
         IServiceCollection services,
         IConfiguration configuration)
     {
+        QuestPDF.Settings.License = LicenseType.Community;
         var connectionString = configuration.GetConnectionString("PostgreSQL");
 
         services.AddControllers()
@@ -31,10 +33,15 @@ public sealed class InvoicesModule : IModule
         });
         services.AddScoped<IInvoiceContext>(provider =>
             provider.GetRequiredService<InvoiceContext>());
+        services.AddScoped<IExportedInvoiceRepository>(provider =>
+            provider.GetRequiredService<InvoiceContext>());
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddScoped<IExportedInvoiceService, ExportedInvoiceService>();
+        services.AddSingleton<IInvoiceDocumentService, InvoiceDocumentService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<InvoiceValidator>();
         services.AddScoped<InvoiceListQueryValidator>();
+        services.AddScoped<GeneratedInvoiceValidator>();
         services.AddSingleton(TimeProvider.System);
     }
 

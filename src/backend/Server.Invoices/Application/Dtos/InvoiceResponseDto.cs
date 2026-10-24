@@ -8,4 +8,5 @@ public sealed record InvoiceResponseDto(
     string Comments,
     string Client,
     string Project,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    bool IsExported);

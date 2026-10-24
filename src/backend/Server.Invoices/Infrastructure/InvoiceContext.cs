@@ -6,7 +6,7 @@ using Server.Invoices.Infrastructure.Abstractions;
 namespace Server.Invoices.Infrastructure;
 
 public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
-    : DbContext(options), IInvoiceContext
+    : DbContext(options), IInvoiceContext, IExportedInvoiceRepository
 {
     public DbSet<Invoice> Invoices => Set<Invoice>();
 
@@ -15,6 +15,10 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
     public DbSet<Project> Projects => Set<Project>();
 
     public DbSet<BusinessProfile> BusinessProfiles => Set<BusinessProfile>();
+
+    public DbSet<GeneratedInvoice> GeneratedInvoices => Set<GeneratedInvoice>();
+
+    public DbSet<InvoiceConfiguration> InvoiceConfigurations => Set<InvoiceConfiguration>();
 
     public async Task<InvoiceQueryResult> QueryInvoicesAsync(
         InvoiceQuery query,
@@ -129,6 +133,123 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .OrderBy(project => project.Name)
             .Select(project => project.Name)
             .ToListAsync(cancellationToken);
+    }
+
+    public Task<BusinessProfile?> GetBusinessProfileAsync(CancellationToken cancellationToken)
+    {
+        return BusinessProfiles.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<InvoiceConfiguration?> GetInvoiceConfigurationAsync(
+        CancellationToken cancellationToken)
+    {
+        return InvoiceConfigurations.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<Client?> GetClientAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return Clients.AsNoTracking().SingleOrDefaultAsync(client => client.Id == id, cancellationToken);
+    }
+
+    public Task<Project?> GetProjectAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return Projects.AsNoTracking().SingleOrDefaultAsync(project => project.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Invoice>> GetEligibleWorkRecordsAsync(
+        Guid clientId,
+        Guid? projectId,
+        string currency,
+        CancellationToken cancellationToken)
+    {
+        var query = Invoices
+            .Include(invoice => invoice.Project)
+            .Where(invoice =>
+                invoice.ClientId == clientId &&
+                invoice.GeneratedInvoiceId == null &&
+                invoice.Currency == currency);
+
+        if (projectId is not null)
+        {
+            query = query.Where(invoice => invoice.ProjectId == projectId);
+        }
+
+        return await query
+            .OrderBy(invoice => invoice.CreatedAt)
+            .ThenBy(invoice => invoice.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Client>> GetClientsWithEligibleWorkAsync(
+        CancellationToken cancellationToken)
+    {
+        return await Clients.AsNoTracking()
+            .Where(client => client.Invoices.Any(invoice => invoice.GeneratedInvoiceId == null))
+            .OrderBy(client => client.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Project>> GetProjectsWithEligibleWorkAsync(
+        CancellationToken cancellationToken)
+    {
+        return await Projects.AsNoTracking()
+            .Where(project => project.Invoices.Any(invoice => invoice.GeneratedInvoiceId == null))
+            .OrderBy(project => project.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddGeneratedInvoiceAsync(
+        GeneratedInvoice invoice,
+        CancellationToken cancellationToken)
+    {
+        await GeneratedInvoices.AddAsync(invoice, cancellationToken);
+    }
+
+    public Task<GeneratedInvoice?> GetGeneratedInvoiceAsync(
+        Guid id,
+        bool forUpdate,
+        CancellationToken cancellationToken)
+    {
+        var query = GeneratedInvoices
+            .Include(invoice => invoice.WorkRecords)
+            .ThenInclude(workRecord => workRecord.Project)
+            .Where(invoice => invoice.Id == id);
+        return forUpdate
+            ? query.SingleOrDefaultAsync(cancellationToken)
+            : query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<GeneratedInvoiceQueryResult> QueryGeneratedInvoicesAsync(
+        GeneratedInvoiceQuery query,
+        CancellationToken cancellationToken)
+    {
+        var invoices = GeneratedInvoices.AsNoTracking();
+        if (query.DateAfter is not null)
+            invoices = invoices.Where(invoice => invoice.IssueDate >= query.DateAfter);
+        if (query.DateBefore is not null)
+            invoices = invoices.Where(invoice => invoice.IssueDate <= query.DateBefore);
+        if (query.ClientId is not null)
+            invoices = invoices.Where(invoice => invoice.ClientId == query.ClientId);
+        if (query.Status is not null)
+            invoices = invoices.Where(invoice => invoice.Status == query.Status);
+        if (query.Search is not null)
+        {
+            var pattern = $"%{EscapeLikePattern(query.Search)}%";
+            invoices = invoices.Where(invoice =>
+                EF.Functions.ILike(invoice.InvoiceNumber, pattern, "\\") ||
+                EF.Functions.ILike(invoice.ClientName, pattern, "\\"));
+        }
+
+        var totalItems = await invoices.CountAsync(cancellationToken);
+        var items = await invoices
+            .Include(invoice => invoice.WorkRecords)
+            .ThenInclude(workRecord => workRecord.Project)
+            .OrderByDescending(invoice => invoice.IssueDate)
+            .ThenByDescending(invoice => invoice.CreatedAt)
+            .Skip(query.Offset)
+            .Take(query.Limit)
+            .ToListAsync(cancellationToken);
+        return new GeneratedInvoiceQueryResult(items, totalItems);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

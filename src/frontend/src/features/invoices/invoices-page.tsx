@@ -69,6 +69,11 @@ function WorkRecordCard({ record }: { record: WorkRecordDto }) {
 			aria-labelledby={`record-${record.id}`}
 		>
 			<CardHeader className="border-b">
+				{record.isExported && (
+					<span className="mb-1 w-fit rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+						Exported
+					</span>
+				)}
 				<CardTitle
 					id={`record-${record.id}`}
 					className="pr-2 text-base"
@@ -96,7 +101,16 @@ function WorkRecordCard({ record }: { record: WorkRecordDto }) {
 							<Link
 								to={`/work/${record.id}/edit`}
 								role="menuitem"
-								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								aria-disabled={record.isExported}
+								onClick={(event) => {
+									if (record.isExported)
+										event.preventDefault();
+								}}
+								className={
+									record.isExported
+										? 'flex w-full cursor-not-allowed items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50'
+										: 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+								}
 							>
 								<PencilIcon aria-hidden="true" />
 								Edit
@@ -352,8 +366,8 @@ function Results({
 		);
 	if (!records || records.items.length === 0)
 		return (
-			<Card className="items-center py-12 text-center shadow-sm">
-				<CardHeader>
+			<Card className="min-h-64 w-full justify-center py-12 text-center shadow-sm">
+				<CardHeader className="mx-auto w-full max-w-xl">
 					<CardTitle>
 						{hasFilters
 							? 'No matching work records'
@@ -366,7 +380,7 @@ function Results({
 					</CardDescription>
 				</CardHeader>
 				{hasFilters && (
-					<CardContent>
+					<CardContent className="flex justify-center">
 						<Button
 							variant="outline"
 							onClick={onClear}
@@ -518,14 +532,24 @@ export function InvoicesPage() {
 							invoice.
 						</p>
 					</div>
-					<Button
-						render={<Link to="/work/new" />}
-						nativeButton={false}
-						size="lg"
-					>
-						<PlusIcon aria-hidden="true" />
-						New work record
-					</Button>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							variant="outline"
+							render={<Link to="/invoices/exported" />}
+							nativeButton={false}
+							size="lg"
+						>
+							View invoices
+						</Button>
+						<Button
+							render={<Link to="/work/new" />}
+							nativeButton={false}
+							size="lg"
+						>
+							<PlusIcon aria-hidden="true" />
+							New work record
+						</Button>
+					</div>
 				</div>
 				<FilterPanel
 					filters={draftFilters}

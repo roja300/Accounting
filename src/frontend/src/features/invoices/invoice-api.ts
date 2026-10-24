@@ -10,6 +10,7 @@ export interface CreateWorkRecordDto {
 export interface WorkRecordDto extends Omit<CreateWorkRecordDto, 'comments'> {
 	id: string;
 	comments: string;
+	isExported: boolean;
 	createdAt: string;
 }
 

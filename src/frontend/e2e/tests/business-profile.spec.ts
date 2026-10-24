@@ -56,11 +56,19 @@ test('should configure business information and create a customer', async ({
 			},
 		});
 	});
+	await page.route('**/api/profile/invoice-configuration', (route) =>
+		route.fulfill({
+			json: {
+				style: 'basic',
+				hasLogo: false,
+				logoFileName: '',
+				updatedAt: null,
+			},
+		}),
+	);
 
 	await page.goto('/profile');
-	await expect(
-		page.getByRole('heading', { name: 'Business profile' }),
-	).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 	await expect(page.getByLabel('Legal name')).toHaveAccessibleDescription(
 		'Your full personal name or registered company name.',
 	);
@@ -79,6 +87,12 @@ test('should configure business information and create a customer', async ({
 	await expect(page.getByText('Business information saved.')).toBeVisible();
 	expect(savedBusiness?.legalName).toBe('Example Freelancer');
 
+	await page.getByRole('button', { name: /Clients/ }).click();
+	const profileBottom = await page
+		.locator('section[aria-labelledby="profile-title"]')
+		.evaluate((section) => section.getBoundingClientRect().bottom);
+	const viewportHeight = await page.evaluate(() => window.innerHeight);
+	expect(profileBottom).toBeGreaterThanOrEqual(viewportHeight - 1);
 	await page.getByRole('button', { name: 'Add customer' }).click();
 	const customerDialog = page.getByRole('dialog', { name: 'Add customer' });
 	await expect(
@@ -97,6 +111,84 @@ test('should configure business information and create a customer', async ({
 		page.getByRole('cell', { name: 'Acme Ltd', exact: true }),
 	).toBeVisible();
 	expect(savedCustomer?.email).toBe('accounts@acme.test');
+});
+
+test('should configure an invoice style and upload a logo', async ({
+	page,
+}) => {
+	let savedStyle: string | undefined;
+	let uploadedLogo = false;
+	await page.route('**/api/profile/business', (route) =>
+		route.fulfill({ status: 404 }),
+	);
+	await page.route('**/api/profile/clients', (route) =>
+		route.fulfill({ json: [] }),
+	);
+	await page.route('**/api/profile/invoice-configuration', async (route) => {
+		if (route.request().method() === 'GET') {
+			await route.fulfill({
+				json: {
+					style: 'basic',
+					hasLogo: false,
+					logoFileName: '',
+					updatedAt: null,
+				},
+			});
+			return;
+		}
+		savedStyle = (route.request().postDataJSON() as { style: string })
+			.style;
+		await route.fulfill({
+			json: {
+				style: savedStyle,
+				hasLogo: false,
+				logoFileName: '',
+				updatedAt: '2026-10-24T12:00:00Z',
+			},
+		});
+	});
+	await page.route(
+		'**/api/profile/invoice-configuration/logo',
+		async (route) => {
+			uploadedLogo = route.request().method() === 'PUT';
+			await route.fulfill({
+				json: {
+					style: savedStyle ?? 'modern',
+					hasLogo: true,
+					logoFileName: 'logo.png',
+					updatedAt: '2026-10-24T12:00:00Z',
+				},
+			});
+		},
+	);
+
+	await page.goto('/profile');
+	await page.getByRole('button', { name: /Invoice configuration/ }).click();
+	const demoLinks = page.getByRole('link', { name: 'View demo PDF' });
+	await expect(demoLinks).toHaveCount(3);
+	await expect(demoLinks.nth(0)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/basic',
+	);
+	await expect(demoLinks.nth(1)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/modern',
+	);
+	await expect(demoLinks.nth(2)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/minimal',
+	);
+	await page.getByText('Modern', { exact: true }).click();
+	await page.getByLabel('Upload logo').setInputFiles({
+		name: 'logo.png',
+		mimeType: 'image/png',
+		buffer: Buffer.from('iVBORw0KGgo=', 'base64'),
+	});
+	await page.getByRole('button', { name: 'Save configuration' }).click();
+
+	await expect(page.getByText('Invoice configuration saved.')).toBeVisible();
+	expect(savedStyle).toBe('modern');
+	expect(uploadedLogo).toBe(true);
 });
 
 test('should prevent recording work until a customer exists', async ({
