@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
 	Building2Icon,
+	FileTextIcon,
+	ImageIcon,
 	PencilIcon,
 	PlusIcon,
 	Trash2Icon,
@@ -50,10 +52,17 @@ import {
 	type ClientResponseDto,
 	createClient,
 	deleteClient,
+	deleteInvoiceLogo,
 	getBusinessProfile,
 	getClients,
+	getInvoiceConfiguration,
+	type InvoiceConfigurationResponseDto,
+	type InvoiceStyle,
+	invoiceLogoUrl,
 	saveBusinessProfile,
+	saveInvoiceConfiguration,
 	updateClient,
+	uploadInvoiceLogo,
 } from '@/features/profile/profile-api';
 
 const optionalText = (maximum: number) =>
@@ -134,8 +143,70 @@ function isAbortError(error: unknown) {
 	return error instanceof DOMException && error.name === 'AbortError';
 }
 
+type ProfileSection = 'business' | 'clients' | 'invoice';
+
+const profileSections: ReadonlyArray<{
+	id: ProfileSection;
+	label: string;
+	description: string;
+	icon: typeof Building2Icon;
+}> = [
+	{
+		id: 'business',
+		label: 'Business profile',
+		description: 'Your legal and contact details',
+		icon: Building2Icon,
+	},
+	{
+		id: 'clients',
+		label: 'Clients',
+		description: 'Invoice recipients and addresses',
+		icon: UsersIcon,
+	},
+	{
+		id: 'invoice',
+		label: 'Invoice configuration',
+		description: 'Design, branding and logo',
+		icon: FileTextIcon,
+	},
+];
+
+const invoiceStyles: ReadonlyArray<{
+	id: InvoiceStyle;
+	name: string;
+	description: string;
+}> = [
+	{
+		id: 'basic',
+		name: 'Basic',
+		description: 'A familiar blue layout with clear sections.',
+	},
+	{
+		id: 'modern',
+		name: 'Modern',
+		description: 'A bold teal design with stronger typography.',
+	},
+	{
+		id: 'minimal',
+		name: 'Minimal',
+		description: 'A clean monochrome layout with subtle dividers.',
+	},
+];
+
 export function ProfilePage() {
+	const [activeSection, setActiveSection] =
+		useState<ProfileSection>('business');
 	const [clients, setClients] = useState<ClientResponseDto[]>([]);
+	const [invoiceConfiguration, setInvoiceConfiguration] =
+		useState<InvoiceConfigurationResponseDto>({
+			style: 'basic',
+			hasLogo: false,
+			logoFileName: '',
+		});
+	const [invoiceStyle, setInvoiceStyle] = useState<InvoiceStyle>('basic');
+	const [logoFile, setLogoFile] = useState<File>();
+	const [configurationMessage, setConfigurationMessage] = useState<string>();
+	const [savingConfiguration, setSavingConfiguration] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [loadError, setLoadError] = useState(false);
 	const [businessMessage, setBusinessMessage] = useState<string>();
@@ -161,10 +232,13 @@ export function ProfilePage() {
 		Promise.all([
 			getBusinessProfile(controller.signal),
 			getClients(controller.signal),
+			getInvoiceConfiguration(controller.signal),
 		])
-			.then(([profile, loadedClients]) => {
+			.then(([profile, loadedClients, configuration]) => {
 				if (profile) resetBusiness(profile);
 				setClients(loadedClients);
+				setInvoiceConfiguration(configuration);
+				setInvoiceStyle(configuration.style);
 				setLoadError(false);
 			})
 			.catch((error: unknown) => {
@@ -239,6 +313,36 @@ export function ProfilePage() {
 		}
 	}
 
+	async function saveConfiguration() {
+		setSavingConfiguration(true);
+		setConfigurationMessage(undefined);
+		try {
+			let saved = await saveInvoiceConfiguration(invoiceStyle);
+			if (logoFile) saved = await uploadInvoiceLogo(logoFile);
+			setInvoiceConfiguration(saved);
+			setLogoFile(undefined);
+			setConfigurationMessage('Invoice configuration saved.');
+		} catch {
+			setConfigurationMessage(
+				'Invoice configuration could not be saved.',
+			);
+		} finally {
+			setSavingConfiguration(false);
+		}
+	}
+
+	async function removeLogo() {
+		setConfigurationMessage(undefined);
+		try {
+			const saved = await deleteInvoiceLogo();
+			setInvoiceConfiguration(saved);
+			setLogoFile(undefined);
+			setConfigurationMessage('Logo removed.');
+		} catch {
+			setConfigurationMessage('The logo could not be removed.');
+		}
+	}
+
 	if (loading) {
 		return (
 			<p className="px-6 py-12 text-center text-muted-foreground">
@@ -269,279 +373,469 @@ export function ProfilePage() {
 						id="profile-title"
 						className="text-3xl font-semibold tracking-tight"
 					>
-						Business profile
+						Profile
 					</h1>
 					<p className="mt-2 text-muted-foreground">
-						Manage the details used on invoices and the customers
-						you work with.
+						Manage your business, clients and invoice appearance.
 					</p>
 				</div>
 
-				<Card>
-					<CardHeader className="border-b">
-						<div className="flex items-start gap-3">
-							<div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-								<Building2Icon
-									className="size-5"
+				<nav
+					aria-label="Profile sections"
+					className="grid gap-3 sm:grid-cols-3"
+				>
+					{profileSections.map((section) => {
+						const Icon = section.icon;
+						const selected = activeSection === section.id;
+						return (
+							<button
+								key={section.id}
+								type="button"
+								aria-current={selected ? 'page' : undefined}
+								onClick={() => setActiveSection(section.id)}
+								className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? 'border-primary bg-primary/5' : 'bg-card hover:bg-accent'}`}
+							>
+								<Icon
+									className="mt-0.5 size-5 shrink-0"
 									aria-hidden="true"
 								/>
+								<span>
+									<span className="block font-medium">
+										{section.label}
+									</span>
+									<span className="mt-1 block text-xs text-muted-foreground">
+										{section.description}
+									</span>
+								</span>
+							</button>
+						);
+					})}
+				</nav>
+
+				{activeSection === 'business' && (
+					<Card>
+						<CardHeader className="border-b">
+							<div className="flex items-start gap-3">
+								<div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+									<Building2Icon
+										className="size-5"
+										aria-hidden="true"
+									/>
+								</div>
+								<div>
+									<CardTitle>Business information</CardTitle>
+									<CardDescription>
+										Legal, contact and registration details
+										for UK invoices.
+									</CardDescription>
+								</div>
 							</div>
-							<div>
-								<CardTitle>Business information</CardTitle>
-								<CardDescription>
-									Legal, contact and registration details for
-									UK invoices.
-								</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<form
+								className="grid gap-5"
+								onSubmit={businessForm.handleSubmit(
+									submitBusiness,
+								)}
+								noValidate
+							>
+								<div className="grid gap-5 sm:grid-cols-2">
+									<Controller
+										name="businessType"
+										control={businessForm.control}
+										render={({ field }) => (
+											<FormSelect
+												label="Business type"
+												description="Choose the legal structure that should appear on your invoices."
+												name={field.name}
+												value={field.value}
+												onChange={field.onChange}
+												onBlur={field.onBlur}
+												options={[
+													[
+														'soleTrader',
+														'Sole trader',
+													],
+													[
+														'limitedCompany',
+														'Limited company',
+													],
+												]}
+											/>
+										)}
+									/>
+									<FormInput
+										label="Legal name"
+										description="Your full personal name or registered company name."
+										registration={businessForm.register(
+											'legalName',
+										)}
+										error={
+											businessForm.formState.errors
+												.legalName?.message
+										}
+									/>
+									<FormInput
+										label="Trading name (optional)"
+										description="The name customers know your business by, if different."
+										registration={businessForm.register(
+											'tradingName',
+										)}
+									/>
+									<FormInput
+										label="Email"
+										description="Business contact email to show on invoices."
+										type="email"
+										registration={businessForm.register(
+											'email',
+										)}
+										error={
+											businessForm.formState.errors.email
+												?.message
+										}
+									/>
+									<FormInput
+										label="Phone (optional)"
+										description="Business contact number to show on invoices."
+										type="tel"
+										registration={businessForm.register(
+											'phone',
+										)}
+									/>
+									<FormInput
+										label="Address line 1"
+										description="Primary business or registered office address."
+										registration={businessForm.register(
+											'addressLine1',
+										)}
+										error={
+											businessForm.formState.errors
+												.addressLine1?.message
+										}
+									/>
+									<FormInput
+										label="Address line 2 (optional)"
+										description="Additional address details, such as a building or suite."
+										registration={businessForm.register(
+											'addressLine2',
+										)}
+									/>
+									<FormInput
+										label="Town or city"
+										description="Town or city for the business address."
+										registration={businessForm.register(
+											'city',
+										)}
+										error={
+											businessForm.formState.errors.city
+												?.message
+										}
+									/>
+									<FormInput
+										label="County (optional)"
+										description="County for the business address, if applicable."
+										registration={businessForm.register(
+											'county',
+										)}
+									/>
+									<FormInput
+										label="Postcode"
+										description="UK postcode for the business address."
+										registration={businessForm.register(
+											'postcode',
+										)}
+										error={
+											businessForm.formState.errors
+												.postcode?.message
+										}
+									/>
+									<FormInput
+										label="Company number"
+										description="Companies House number; required for limited companies."
+										registration={businessForm.register(
+											'companyNumber',
+										)}
+										error={
+											businessForm.formState.errors
+												.companyNumber?.message
+										}
+									/>
+									<FormInput
+										label="VAT number (if registered)"
+										description="VAT registration number to include on VAT invoices."
+										registration={businessForm.register(
+											'vatNumber',
+										)}
+									/>
+								</div>
+								<div className="flex items-center justify-end gap-4">
+									<p
+										role="status"
+										className="text-sm text-muted-foreground"
+									>
+										{businessMessage}
+									</p>
+									<Button
+										type="submit"
+										disabled={
+											businessForm.formState.isSubmitting
+										}
+									>
+										{businessForm.formState.isSubmitting
+											? 'Saving…'
+											: 'Save business'}
+									</Button>
+								</div>
+							</form>
+						</CardContent>
+					</Card>
+				)}
+
+				{activeSection === 'clients' && (
+					<Card>
+						<CardHeader className="flex-row items-start justify-between border-b">
+							<div className="flex items-start gap-3">
+								<div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+									<UsersIcon
+										className="size-5"
+										aria-hidden="true"
+									/>
+								</div>
+								<div>
+									<CardTitle>Customers</CardTitle>
+									<CardDescription>
+										Configure invoice recipients before
+										recording work.
+									</CardDescription>
+								</div>
 							</div>
-						</div>
-					</CardHeader>
-					<CardContent>
-						<form
-							className="grid gap-5"
-							onSubmit={businessForm.handleSubmit(submitBusiness)}
-							noValidate
-						>
-							<div className="grid gap-5 sm:grid-cols-2">
-								<Controller
-									name="businessType"
-									control={businessForm.control}
-									render={({ field }) => (
-										<FormSelect
-											label="Business type"
-											description="Choose the legal structure that should appear on your invoices."
-											name={field.name}
-											value={field.value}
-											onChange={field.onChange}
-											onBlur={field.onBlur}
-											options={[
-												['soleTrader', 'Sole trader'],
-												[
-													'limitedCompany',
-													'Limited company',
-												],
-											]}
+							<Button
+								type="button"
+								onClick={() => openClient()}
+							>
+								<PlusIcon
+									className="size-4"
+									aria-hidden="true"
+								/>
+								Add customer
+							</Button>
+						</CardHeader>
+						<CardContent>
+							{clients.length === 0 ? (
+								<p className="py-8 text-center text-sm text-muted-foreground">
+									No customers configured. Add a customer
+									before creating a work record.
+								</p>
+							) : (
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Customer</TableHead>
+											<TableHead>Contact</TableHead>
+											<TableHead>Address</TableHead>
+											<TableHead className="text-right">
+												Actions
+											</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{clients.map((client) => (
+											<TableRow key={client.id}>
+												<TableCell className="font-medium">
+													{client.name}
+												</TableCell>
+												<TableCell>
+													{client.contactName ||
+														client.email}
+													<span className="block text-xs text-muted-foreground">
+														{client.email}
+													</span>
+												</TableCell>
+												<TableCell>
+													{client.city},{' '}
+													{client.postcode}
+												</TableCell>
+												<TableCell>
+													<div className="flex justify-end gap-1">
+														<Button
+															type="button"
+															variant="ghost"
+															size="icon"
+															aria-label={`Edit ${client.name}`}
+															onClick={() =>
+																openClient(
+																	client,
+																)
+															}
+														>
+															<PencilIcon className="size-4" />
+														</Button>
+														<Button
+															type="button"
+															variant="ghost"
+															size="icon"
+															aria-label={`Delete ${client.name}`}
+															onClick={() =>
+																removeClient(
+																	client,
+																)
+															}
+														>
+															<Trash2Icon className="size-4" />
+														</Button>
+													</div>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							)}
+						</CardContent>
+					</Card>
+				)}
+
+				{activeSection === 'invoice' && (
+					<Card>
+						<CardHeader className="border-b">
+							<div className="flex items-start gap-3">
+								<div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+									<FileTextIcon
+										className="size-5"
+										aria-hidden="true"
+									/>
+								</div>
+								<div>
+									<CardTitle>Invoice configuration</CardTitle>
+									<CardDescription>
+										Choose the design and branding used for
+										newly generated invoices.
+									</CardDescription>
+								</div>
+							</div>
+						</CardHeader>
+						<CardContent className="grid gap-8">
+							<fieldset className="grid gap-4">
+								<legend className="text-base font-medium">
+									Invoice style
+								</legend>
+								<p className="text-sm text-muted-foreground">
+									The selected style is applied when an
+									invoice is generated.
+								</p>
+								<div className="grid gap-4 md:grid-cols-3">
+									{invoiceStyles.map((style) => (
+										<label
+											key={style.id}
+											className={`cursor-pointer rounded-xl border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${invoiceStyle === style.id ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}
+										>
+											<input
+												type="radio"
+												name="invoice-style"
+												value={style.id}
+												checked={
+													invoiceStyle === style.id
+												}
+												onChange={() =>
+													setInvoiceStyle(style.id)
+												}
+												className="sr-only"
+											/>
+											<InvoiceStylePreview
+												style={style.id}
+											/>
+											<span className="mt-4 block font-medium">
+												{style.name}
+											</span>
+											<span className="mt-1 block text-sm text-muted-foreground">
+												{style.description}
+											</span>
+										</label>
+									))}
+								</div>
+							</fieldset>
+
+							<div className="grid gap-3 border-t pt-6">
+								<div className="flex items-center gap-2">
+									<ImageIcon
+										className="size-5"
+										aria-hidden="true"
+									/>
+									<h2 className="font-medium">
+										Business logo
+									</h2>
+								</div>
+								<FieldDescription>
+									Upload a PNG or JPEG up to 2 MB. It will
+									appear on newly generated invoices.
+								</FieldDescription>
+								{invoiceConfiguration.hasLogo && !logoFile && (
+									<div className="flex flex-wrap items-center gap-4 rounded-lg border bg-muted/20 p-4">
+										<img
+											src={`${invoiceLogoUrl}?v=${invoiceConfiguration.updatedAt ?? ''}`}
+											alt="Current business logo"
+											className="h-14 max-w-48 object-contain"
 										/>
-									)}
+										<span className="text-sm text-muted-foreground">
+											{invoiceConfiguration.logoFileName}
+										</span>
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											onClick={removeLogo}
+										>
+											Remove logo
+										</Button>
+									</div>
+								)}
+								<Label htmlFor="invoice-logo">
+									Upload logo
+								</Label>
+								<Input
+									id="invoice-logo"
+									type="file"
+									accept="image/png,image/jpeg"
+									onChange={(event) => {
+										const file = event.target.files?.[0];
+										if (!file) return;
+										if (file.size > 2 * 1024 * 1024) {
+											setLogoFile(undefined);
+											setConfigurationMessage(
+												'Choose a logo no larger than 2 MB.',
+											);
+											return;
+										}
+										setLogoFile(file);
+										setConfigurationMessage(undefined);
+									}}
 								/>
-								<FormInput
-									label="Legal name"
-									description="Your full personal name or registered company name."
-									registration={businessForm.register(
-										'legalName',
-									)}
-									error={
-										businessForm.formState.errors.legalName
-											?.message
-									}
-								/>
-								<FormInput
-									label="Trading name (optional)"
-									description="The name customers know your business by, if different."
-									registration={businessForm.register(
-										'tradingName',
-									)}
-								/>
-								<FormInput
-									label="Email"
-									description="Business contact email to show on invoices."
-									type="email"
-									registration={businessForm.register(
-										'email',
-									)}
-									error={
-										businessForm.formState.errors.email
-											?.message
-									}
-								/>
-								<FormInput
-									label="Phone (optional)"
-									description="Business contact number to show on invoices."
-									type="tel"
-									registration={businessForm.register(
-										'phone',
-									)}
-								/>
-								<FormInput
-									label="Address line 1"
-									description="Primary business or registered office address."
-									registration={businessForm.register(
-										'addressLine1',
-									)}
-									error={
-										businessForm.formState.errors
-											.addressLine1?.message
-									}
-								/>
-								<FormInput
-									label="Address line 2 (optional)"
-									description="Additional address details, such as a building or suite."
-									registration={businessForm.register(
-										'addressLine2',
-									)}
-								/>
-								<FormInput
-									label="Town or city"
-									description="Town or city for the business address."
-									registration={businessForm.register('city')}
-									error={
-										businessForm.formState.errors.city
-											?.message
-									}
-								/>
-								<FormInput
-									label="County (optional)"
-									description="County for the business address, if applicable."
-									registration={businessForm.register(
-										'county',
-									)}
-								/>
-								<FormInput
-									label="Postcode"
-									description="UK postcode for the business address."
-									registration={businessForm.register(
-										'postcode',
-									)}
-									error={
-										businessForm.formState.errors.postcode
-											?.message
-									}
-								/>
-								<FormInput
-									label="Company number"
-									description="Companies House number; required for limited companies."
-									registration={businessForm.register(
-										'companyNumber',
-									)}
-									error={
-										businessForm.formState.errors
-											.companyNumber?.message
-									}
-								/>
-								<FormInput
-									label="VAT number (if registered)"
-									description="VAT registration number to include on VAT invoices."
-									registration={businessForm.register(
-										'vatNumber',
-									)}
-								/>
+								{logoFile && (
+									<p className="text-sm text-muted-foreground">
+										Ready to upload: {logoFile.name}
+									</p>
+								)}
 							</div>
-							<div className="flex items-center justify-end gap-4">
+
+							<div className="flex items-center justify-end gap-4 border-t pt-6">
 								<p
 									role="status"
 									className="text-sm text-muted-foreground"
 								>
-									{businessMessage}
+									{configurationMessage}
 								</p>
 								<Button
-									type="submit"
-									disabled={
-										businessForm.formState.isSubmitting
-									}
+									type="button"
+									onClick={saveConfiguration}
+									disabled={savingConfiguration}
 								>
-									{businessForm.formState.isSubmitting
+									{savingConfiguration
 										? 'Saving…'
-										: 'Save business'}
+										: 'Save configuration'}
 								</Button>
 							</div>
-						</form>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className="flex-row items-start justify-between border-b">
-						<div className="flex items-start gap-3">
-							<div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-								<UsersIcon
-									className="size-5"
-									aria-hidden="true"
-								/>
-							</div>
-							<div>
-								<CardTitle>Customers</CardTitle>
-								<CardDescription>
-									Configure invoice recipients before
-									recording work.
-								</CardDescription>
-							</div>
-						</div>
-						<Button
-							type="button"
-							onClick={() => openClient()}
-						>
-							<PlusIcon
-								className="size-4"
-								aria-hidden="true"
-							/>
-							Add customer
-						</Button>
-					</CardHeader>
-					<CardContent>
-						{clients.length === 0 ? (
-							<p className="py-8 text-center text-sm text-muted-foreground">
-								No customers configured. Add a customer before
-								creating a work record.
-							</p>
-						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Customer</TableHead>
-										<TableHead>Contact</TableHead>
-										<TableHead>Address</TableHead>
-										<TableHead className="text-right">
-											Actions
-										</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{clients.map((client) => (
-										<TableRow key={client.id}>
-											<TableCell className="font-medium">
-												{client.name}
-											</TableCell>
-											<TableCell>
-												{client.contactName ||
-													client.email}
-												<span className="block text-xs text-muted-foreground">
-													{client.email}
-												</span>
-											</TableCell>
-											<TableCell>
-												{client.city}, {client.postcode}
-											</TableCell>
-											<TableCell>
-												<div className="flex justify-end gap-1">
-													<Button
-														type="button"
-														variant="ghost"
-														size="icon"
-														aria-label={`Edit ${client.name}`}
-														onClick={() =>
-															openClient(client)
-														}
-													>
-														<PencilIcon className="size-4" />
-													</Button>
-													<Button
-														type="button"
-														variant="ghost"
-														size="icon"
-														aria-label={`Delete ${client.name}`}
-														onClick={() =>
-															removeClient(client)
-														}
-													>
-														<Trash2Icon className="size-4" />
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						)}
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
+				)}
 			</div>
 
 			<Dialog
@@ -678,6 +972,48 @@ export function ProfilePage() {
 }
 
 type Registration = ReturnType<ReturnType<typeof useForm>['register']>;
+
+function InvoiceStylePreview({ style }: { style: InvoiceStyle }) {
+	const accent =
+		style === 'modern'
+			? 'bg-teal-700'
+			: style === 'minimal'
+				? 'bg-foreground'
+				: 'bg-blue-700';
+	return (
+		<div
+			aria-hidden="true"
+			className="aspect-[1.45] rounded-md border bg-background p-3 shadow-sm"
+		>
+			<div className="flex items-start justify-between">
+				<div className={`h-2 w-12 rounded-sm ${accent}`} />
+				<div className="grid gap-1">
+					<div className="h-1.5 w-10 rounded-sm bg-foreground/70" />
+					<div className="ml-auto h-1 w-7 rounded-sm bg-muted-foreground/30" />
+				</div>
+			</div>
+			<div className="mt-4 h-5 rounded-sm bg-muted" />
+			<div className="mt-3 grid grid-cols-3 gap-1">
+				<div
+					className={`col-span-3 h-2 rounded-sm ${style === 'minimal' ? 'border-b border-foreground bg-transparent' : accent}`}
+				/>
+				{[
+					'description',
+					'project',
+					'amount',
+					'service',
+					'period',
+					'total',
+				].map((line) => (
+					<div
+						key={line}
+						className="h-1.5 rounded-sm bg-muted"
+					/>
+				))}
+			</div>
+		</div>
+	);
+}
 
 function FormInput({
 	id,
