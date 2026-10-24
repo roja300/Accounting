@@ -14,29 +14,22 @@ Editing work records.
 ### Non-functional Specification (NFS)
 
 1. The same patterns should be followed as with creating work records.
+2. Use the same status pattern as when work is marked as invoiced, however, they will be hidden from view.
 
 ## Notes
 
-- N/A
+- Use the same status function as when work is marked as invoiced.
+- There is already a button for this.
 
 ### Codex Response
 
-[//]: # (Remove these two, this is just as an example of how you should format your responses.)
+#### [2026-10-24 17:06] Implemented Work Record Deletion
 
-#### [2026-11-07 16:04] You Did a Thing
+Added status-based soft deletion for work records, including explicit uninvoiced, invoiced, and deleted states, a PostgreSQL migration, and filtering that prevents deleted records from appearing in list and detail queries. Added `DELETE /invoices/{id}` with not-found handling and reused the status-update service pattern so records remain retained for accounting history.
 
-Fill me in...
-
-##### Comments
-
-1. N/A
-
-#### [2026-11-07 17:29] You Did a Thing Again
-
-Fill me in with your updates.
+Enabled the existing Delete card action with an accessible confirmation dialog, progress and error handling, success feedback, and refreshed pagination after deletion. Added service, endpoint, and end-to-end coverage, and corrected Playwright discovery so all existing browser suites run together.
 
 ##### Comments
 
-1. N/A
-
-```
+1. Deletion is reversible at the data level through a future controlled status transition, but no restore action is exposed in this change.
+2. The repository-wide Biome check still reports pre-existing formatting and import-order diagnostics in untouched frontend files; all files changed by this request pass scoped Biome validation.
