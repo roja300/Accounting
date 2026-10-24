@@ -4,7 +4,6 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	EllipsisVerticalIcon,
-	FileOutputIcon,
 	FolderKanbanIcon,
 	PencilIcon,
 	PlusIcon,
@@ -32,7 +31,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { ExportInvoiceDialog } from '@/features/invoices/export-invoice-dialog';
 import {
 	getWorkRecordOptions,
 	getWorkRecords,
@@ -457,7 +455,6 @@ export function InvoicesPage() {
 	const [retryCount, setRetryCount] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
-	const [exportOpen, setExportOpen] = useState(false);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -545,14 +542,6 @@ export function InvoicesPage() {
 							View invoices
 						</Button>
 						<Button
-							variant="outline"
-							size="lg"
-							onClick={() => setExportOpen(true)}
-						>
-							<FileOutputIcon aria-hidden="true" />
-							Generate invoice
-						</Button>
-						<Button
 							render={<Link to="/work/new" />}
 							nativeButton={false}
 							size="lg"
@@ -593,11 +582,6 @@ export function InvoicesPage() {
 					error={error}
 					onPrevious={() => setPage((current) => current - 1)}
 					onNext={() => setPage((current) => current + 1)}
-				/>
-				<ExportInvoiceDialog
-					open={exportOpen}
-					onOpenChange={setExportOpen}
-					onGenerated={() => setRetryCount((count) => count + 1)}
 				/>
 			</div>
 		</section>

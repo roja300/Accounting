@@ -67,28 +67,11 @@ test('should present empty work and invoice results as full-width panels', async
 	}
 });
 
-test('should generate an invoice from selected client work records', async ({
+test('should generate an invoice from the exported invoices page using named options', async ({
 	page,
 }) => {
 	let request: Record<string, unknown> | undefined;
-	await page.route('**/api/invoices**', async (route) => {
-		const url = new URL(route.request().url());
-		if (url.pathname.endsWith('/options')) {
-			await route.fulfill({
-				json: { clients: ['Acme Ltd'], projects: ['Retainer'] },
-			});
-			return;
-		}
-		await route.fulfill({
-			json: {
-				items: [],
-				page: 1,
-				pageSize: 9,
-				totalItems: 0,
-				totalPages: 0,
-			},
-		});
-	});
+	const projectId = 'dd0c3ad8-e41c-47f4-9c15-bfb0c5a132b4';
 	await page.route('**/api/exported-invoices**', async (route) => {
 		const url = new URL(route.request().url());
 		if (url.pathname.endsWith('/options')) {
@@ -99,10 +82,22 @@ test('should generate an invoice from selected client work records', async ({
 					],
 					projects: [
 						{
-							id: 'dd0c3ad8-e41c-47f4-9c15-bfb0c5a132b4',
+							id: projectId,
 							name: 'Retainer',
 						},
 					],
+				},
+			});
+			return;
+		}
+		if (route.request().method() === 'GET') {
+			await route.fulfill({
+				json: {
+					items: [],
+					page: 1,
+					pageSize: 9,
+					totalItems: 0,
+					totalPages: 0,
 				},
 			});
 			return;
@@ -111,14 +106,22 @@ test('should generate an invoice from selected client work records', async ({
 		await route.fulfill({ status: 201, json: invoice });
 	});
 
-	await page.goto('/invoices');
+	await page.goto('/invoices/exported');
 	await page.getByRole('button', { name: 'Generate invoice' }).click();
 	const dialog = page.getByRole('dialog', { name: 'Generate invoice' });
 	await expect(dialog.getByLabel('Client')).toHaveAccessibleDescription(
 		'Only clients with work ready to invoice are shown.',
 	);
-	await dialog.getByLabel('Client').click();
+	const clientSelect = dialog.getByLabel('Client');
+	await clientSelect.click();
 	await page.getByRole('option', { name: 'Acme Ltd' }).click();
+	await expect(clientSelect).toContainText('Acme Ltd');
+	await expect(clientSelect).not.toContainText(invoice.clientId);
+	const projectSelect = dialog.getByLabel('Project');
+	await projectSelect.click();
+	await page.getByRole('option', { name: 'Retainer' }).click();
+	await expect(projectSelect).toContainText('Retainer');
+	await expect(projectSelect).not.toContainText(projectId);
 	await dialog.getByRole('button', { name: 'Generate invoice' }).click();
 
 	await expect(
@@ -130,6 +133,7 @@ test('should generate an invoice from selected client work records', async ({
 	await expect(generatedDownload).toContainText('Download PDF');
 	await expect(generatedDownload.locator('svg')).toBeVisible();
 	expect(request?.clientId).toBe(invoice.clientId);
+	expect(request?.projectId).toBe(projectId);
 	expect(request?.currency).toBe('GBP');
 });
 

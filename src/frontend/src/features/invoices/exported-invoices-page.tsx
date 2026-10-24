@@ -5,6 +5,7 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	DownloadIcon,
+	FileOutputIcon,
 	FileTextIcon,
 	MailCheckIcon,
 	SearchIcon,
@@ -40,6 +41,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { ExportInvoiceDialog } from '@/features/invoices/export-invoice-dialog';
 import {
 	deleteGeneratedInvoice,
 	type GeneratedInvoiceDto,
@@ -369,6 +371,7 @@ export function ExportedInvoicesPage() {
 	const [error, setError] = useState('');
 	const [busyId, setBusyId] = useState('');
 	const [deleteTarget, setDeleteTarget] = useState<GeneratedInvoiceDto>();
+	const [exportOpen, setExportOpen] = useState(false);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -456,13 +459,19 @@ export function ExportedInvoicesPage() {
 							record when they are sent or paid.
 						</p>
 					</div>
-					<Button
-						variant="outline"
-						render={<Link to="/invoices" />}
-						nativeButton={false}
-					>
-						View work records
-					</Button>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							variant="outline"
+							render={<Link to="/invoices" />}
+							nativeButton={false}
+						>
+							View work records
+						</Button>
+						<Button onClick={() => setExportOpen(true)}>
+							<FileOutputIcon aria-hidden="true" />
+							Generate invoice
+						</Button>
+					</div>
 				</div>
 
 				<Card className="mb-6 shadow-sm">
@@ -604,6 +613,12 @@ export function ExportedInvoicesPage() {
 					onNext={() => setPage((value) => value + 1)}
 				/>
 			</div>
+
+			<ExportInvoiceDialog
+				open={exportOpen}
+				onOpenChange={setExportOpen}
+				onGenerated={() => setRefresh((value) => value + 1)}
+			/>
 
 			<Dialog
 				open={Boolean(deleteTarget)}

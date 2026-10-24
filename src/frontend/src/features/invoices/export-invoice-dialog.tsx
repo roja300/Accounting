@@ -59,6 +59,12 @@ export function ExportInvoiceDialog({
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [generated, setGenerated] = useState<GeneratedInvoiceDto>();
+	const selectedClientName = options?.clients.find(
+		(client) => client.id === clientId,
+	)?.name;
+	const selectedProjectName = options?.projects.find(
+		(project) => project.id === projectId,
+	)?.name;
 
 	useEffect(() => {
 		if (!open) return;
@@ -192,7 +198,10 @@ export function ExportInvoiceDialog({
 										aria-describedby="export-client-description"
 										className="w-full"
 									>
-										<SelectValue placeholder="Select a client" />
+										<SelectValue>
+											{selectedClientName ??
+												'Select a client'}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent
 										align="start"
@@ -233,7 +242,10 @@ export function ExportInvoiceDialog({
 										aria-describedby="export-project-description"
 										className="w-full"
 									>
-										<SelectValue />
+										<SelectValue>
+											{selectedProjectName ??
+												'All projects'}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent
 										align="start"
