@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
 	Building2Icon,
+	ExternalLinkIcon,
 	FileTextIcon,
 	ImageIcon,
 	PencilIcon,
@@ -12,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -59,6 +60,7 @@ import {
 	type InvoiceConfigurationResponseDto,
 	type InvoiceStyle,
 	invoiceLogoUrl,
+	invoiceStyleDemonstrationUrl,
 	saveBusinessProfile,
 	saveInvoiceConfiguration,
 	updateClient,
@@ -724,32 +726,52 @@ export function ProfilePage() {
 								</p>
 								<div className="grid gap-4 md:grid-cols-3">
 									{invoiceStyles.map((style) => (
-										<label
+										<div
 											key={style.id}
-											className={`cursor-pointer rounded-xl border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${invoiceStyle === style.id ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}
+											className={`flex flex-col rounded-xl border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${invoiceStyle === style.id ? 'border-primary bg-primary/5' : 'hover:bg-accent'}`}
 										>
-											<input
-												type="radio"
-												name="invoice-style"
-												value={style.id}
-												checked={
-													invoiceStyle === style.id
-												}
-												onChange={() =>
-													setInvoiceStyle(style.id)
-												}
-												className="sr-only"
-											/>
-											<InvoiceStylePreview
-												style={style.id}
-											/>
-											<span className="mt-4 block font-medium">
-												{style.name}
-											</span>
-											<span className="mt-1 block text-sm text-muted-foreground">
-												{style.description}
-											</span>
-										</label>
+											<label className="flex flex-1 cursor-pointer flex-col">
+												<input
+													type="radio"
+													name="invoice-style"
+													value={style.id}
+													checked={
+														invoiceStyle ===
+														style.id
+													}
+													onChange={() =>
+														setInvoiceStyle(
+															style.id,
+														)
+													}
+													className="sr-only"
+												/>
+												<InvoiceStylePreview
+													style={style.id}
+												/>
+												<span className="mt-4 block font-medium">
+													{style.name}
+												</span>
+												<span className="mt-1 block text-sm text-muted-foreground">
+													{style.description}
+												</span>
+											</label>
+											<a
+												href={invoiceStyleDemonstrationUrl(
+													style.id,
+												)}
+												target="_blank"
+												rel="noreferrer"
+												className={buttonVariants({
+													variant: 'outline',
+													size: 'sm',
+													className: 'mt-4 w-full',
+												})}
+											>
+												<ExternalLinkIcon aria-hidden="true" />
+												View demo PDF
+											</a>
+										</div>
 									))}
 								</div>
 							</fieldset>
