@@ -1,7 +1,7 @@
 import { DownloadIcon, FileTextIcon, LoaderCircleIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
 	Dialog,
 	DialogContent,
@@ -148,26 +148,16 @@ export function ExportInvoiceDialog({
 							>
 								Close
 							</Button>
-							<Button
-								render={
-									<a
-										href={generatedInvoicePdfUrl(
-											generated.id,
-										)}
-										aria-label={`Download ${generated.invoiceNumber} PDF`}
-										target="_blank"
-										rel="noreferrer"
-									>
-										<span className="sr-only">
-											Download invoice PDF
-										</span>
-									</a>
-								}
-								nativeButton={false}
+							<a
+								href={generatedInvoicePdfUrl(generated.id)}
+								aria-label={`Download ${generated.invoiceNumber} PDF`}
+								target="_blank"
+								rel="noreferrer"
+								className={buttonVariants()}
 							>
 								<DownloadIcon aria-hidden="true" />
 								Download PDF
-							</Button>
+							</a>
 						</DialogFooter>
 					</>
 				) : (

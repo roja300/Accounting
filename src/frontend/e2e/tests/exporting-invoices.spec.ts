@@ -22,6 +22,51 @@ const invoice = {
 	createdAt: '2026-10-19T12:00:00Z',
 };
 
+test('should present empty work and invoice results as full-width panels', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1200, height: 800 });
+	await page.route('**/api/invoices**', async (route) => {
+		const url = new URL(route.request().url());
+		await route.fulfill({
+			json: url.pathname.endsWith('/options')
+				? { clients: [], projects: [] }
+				: {
+						items: [],
+						page: 1,
+						pageSize: 9,
+						totalItems: 0,
+						totalPages: 0,
+					},
+		});
+	});
+	await page.route('**/api/exported-invoices**', (route) =>
+		route.fulfill({
+			json: {
+				items: [],
+				page: 1,
+				pageSize: 9,
+				totalItems: 0,
+				totalPages: 0,
+			},
+		}),
+	);
+
+	for (const [path, heading] of [
+		['/invoices', 'No work records yet'],
+		['/invoices/exported', 'No exported invoices yet'],
+	] as const) {
+		await page.goto(path);
+		const panel = page
+			.getByText(heading, { exact: true })
+			.locator('xpath=ancestor::*[@data-slot="card"]');
+		await expect(panel).toBeVisible();
+		const dimensions = await panel.boundingBox();
+		expect(dimensions?.width).toBeGreaterThan(900);
+		expect(dimensions?.height).toBeGreaterThanOrEqual(256);
+	}
+});
+
 test('should generate an invoice from selected client work records', async ({
 	page,
 }) => {
@@ -79,6 +124,11 @@ test('should generate an invoice from selected client work records', async ({
 	await expect(
 		page.getByRole('heading', { name: 'Invoice ready' }),
 	).toBeVisible();
+	const generatedDownload = page.getByRole('link', {
+		name: `Download ${invoice.invoiceNumber} PDF`,
+	});
+	await expect(generatedDownload).toContainText('Download PDF');
+	await expect(generatedDownload.locator('svg')).toBeVisible();
 	expect(request?.clientId).toBe(invoice.clientId);
 	expect(request?.currency).toBe('GBP');
 });
@@ -116,6 +166,11 @@ test('should update payment status and confirm before deleting an invoice', asyn
 
 	await page.goto('/invoices/exported');
 	await expect(page.getByText('INV-20261019-ABC123')).toBeVisible();
+	const cardDownload = page.getByRole('link', {
+		name: `Download ${invoice.invoiceNumber} PDF`,
+	});
+	await expect(cardDownload).toContainText('PDF');
+	await expect(cardDownload.locator('svg')).toBeVisible();
 	await page.getByRole('button', { name: 'Payment received' }).click();
 	await expect.poll(() => updatedStatus).toBe('paymentReceived');
 	await page

@@ -368,8 +368,8 @@ function Results({
 		);
 	if (!records || records.items.length === 0)
 		return (
-			<Card className="items-center py-12 text-center shadow-sm">
-				<CardHeader>
+			<Card className="min-h-64 w-full justify-center py-12 text-center shadow-sm">
+				<CardHeader className="mx-auto w-full max-w-xl">
 					<CardTitle>
 						{hasFilters
 							? 'No matching work records'
@@ -382,7 +382,7 @@ function Results({
 					</CardDescription>
 				</CardHeader>
 				{hasFilters && (
-					<CardContent>
+					<CardContent className="flex justify-center">
 						<Button
 							variant="outline"
 							onClick={onClear}
