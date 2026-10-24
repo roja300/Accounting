@@ -362,7 +362,7 @@ export function ProfilePage() {
 	return (
 		<section
 			aria-labelledby="profile-title"
-			className="bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
+			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
 		>
 			<div className="mx-auto grid w-full max-w-5xl gap-8">
 				<div>
