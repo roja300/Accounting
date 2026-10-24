@@ -88,6 +88,11 @@ test('should configure business information and create a customer', async ({
 	expect(savedBusiness?.legalName).toBe('Example Freelancer');
 
 	await page.getByRole('button', { name: /Clients/ }).click();
+	const profileBottom = await page
+		.locator('section[aria-labelledby="profile-title"]')
+		.evaluate((section) => section.getBoundingClientRect().bottom);
+	const viewportHeight = await page.evaluate(() => window.innerHeight);
+	expect(profileBottom).toBeGreaterThanOrEqual(viewportHeight - 1);
 	await page.getByRole('button', { name: 'Add customer' }).click();
 	const customerDialog = page.getByRole('dialog', { name: 'Add customer' });
 	await expect(
