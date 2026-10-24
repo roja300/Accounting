@@ -431,7 +431,11 @@ export function ExportedInvoicesPage() {
 		try {
 			await deleteGeneratedInvoice(deleteTarget.id);
 			setDeleteTarget(undefined);
-			setRefresh((value) => value + 1);
+			if (data?.items.length === 1 && page > 1) {
+				setPage((value) => value - 1);
+			} else {
+				setRefresh((value) => value + 1);
+			}
 		} catch {
 			setError('The invoice could not be deleted.');
 		} finally {
@@ -569,16 +573,19 @@ export function ExportedInvoicesPage() {
 										<SelectItem value="all">
 											All statuses
 										</SelectItem>
-										{Object.entries(statusDetails).map(
-											([value, details]) => (
+										{Object.entries(statusDetails)
+											.filter(
+												([value]) =>
+													value !== 'deleted',
+											)
+											.map(([value, details]) => (
 												<SelectItem
 													key={value}
 													value={value}
 												>
 													{details.label}
 												</SelectItem>
-											),
-										)}
+											))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -630,9 +637,10 @@ export function ExportedInvoicesPage() {
 					<DialogHeader>
 						<DialogTitle>Delete this invoice?</DialogTitle>
 						<DialogDescription>
-							{deleteTarget?.invoiceNumber} will be marked as
-							deleted and kept in your records. This action cannot
-							be undone.
+							Warning: {deleteTarget?.invoiceNumber} will be
+							hidden from exported invoices. Its work records will
+							be detached and made available to invoice again.
+							This action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>

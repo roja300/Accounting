@@ -4,7 +4,6 @@ using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
 using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
-using Server.Invoices.Domain;
 
 namespace Server.Invoices.Controllers;
 
@@ -120,11 +119,9 @@ public sealed class InvoiceController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var invoice = await invoiceService.UpdateStatusAsync(
-            id,
-            WorkRecordStatuses.Deleted,
-            cancellationToken);
-        return invoice is null ? NotFound() : NoContent();
+        return await invoiceService.DeleteAsync(id, cancellationToken)
+            ? NoContent()
+            : NotFound();
     }
 
     private ActionResult ClientNotConfigured()

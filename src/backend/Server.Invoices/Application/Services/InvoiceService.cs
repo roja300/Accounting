@@ -128,6 +128,35 @@ public sealed class InvoiceService(
         return Map(invoice);
     }
 
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var invoice = await context.GetInvoiceForUpdateAsync(id, cancellationToken);
+        if (invoice is null)
+        {
+            return false;
+        }
+
+        var now = timeProvider.GetUtcNow();
+        if (invoice.GeneratedInvoice is not null)
+        {
+            var generatedInvoice = invoice.GeneratedInvoice;
+            generatedInvoice.WorkRecords.Remove(invoice);
+            generatedInvoice.Subtotal = generatedInvoice.WorkRecords.Sum(record => record.Value);
+            generatedInvoice.UpdatedAt = now;
+            invoice.GeneratedInvoiceId = null;
+            invoice.GeneratedInvoice = null;
+            invoice.Status = WorkRecordStatuses.Uninvoiced;
+        }
+        else
+        {
+            invoice.Status = WorkRecordStatuses.Deleted;
+        }
+
+        invoice.UpdatedAt = now;
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<InvoiceOptionsDto> GetOptionsAsync(CancellationToken cancellationToken)
     {
         var clients = await context.GetClientNamesAsync(cancellationToken);

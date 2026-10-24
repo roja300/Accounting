@@ -50,6 +50,8 @@ public class ExportedInvoiceServiceTests
         Assert.Equal("Example Studio", saved.BusinessName);
         Assert.Equal("Acme Ltd", saved.ClientName);
         Assert.All([first, second], record => Assert.Equal(saved.Id, record.GeneratedInvoiceId));
+        Assert.All([first, second], record =>
+            Assert.Equal(WorkRecordStatuses.Invoiced, record.Status));
         Assert.Equal(2, result.Lines.Count);
         Assert.Equal(1, repository.SaveChangesCalls);
     }
@@ -89,6 +91,38 @@ public class ExportedInvoiceServiceTests
 
         Assert.NotNull(result);
         Assert.Equal(GeneratedInvoiceStatuses.PaymentReceived, invoice.Status);
+        Assert.Equal(1, repository.SaveChangesCalls);
+    }
+
+    [Fact]
+    public async Task ShouldHideInvoiceAndRestoreWorkRecords_WhenInvoiceIsDeleted()
+    {
+        var invoice = CreateGeneratedInvoice();
+        foreach (var record in invoice.WorkRecords)
+        {
+            record.GeneratedInvoiceId = invoice.Id;
+            record.GeneratedInvoice = invoice;
+            record.Status = WorkRecordStatuses.Invoiced;
+        }
+        var releasedRecords = invoice.WorkRecords.ToList();
+        var repository = new MockExportedInvoiceRepository { StoredGeneratedInvoice = invoice };
+        var service = new ExportedInvoiceService(repository, new FixedTimeProvider(Now));
+
+        var result = await service.UpdateStatusAsync(
+            invoice.Id,
+            GeneratedInvoiceStatuses.Deleted,
+            CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(GeneratedInvoiceStatuses.Deleted, invoice.Status);
+        Assert.Empty(invoice.WorkRecords);
+        Assert.All(releasedRecords, record =>
+        {
+            Assert.Null(record.GeneratedInvoiceId);
+            Assert.Null(record.GeneratedInvoice);
+            Assert.Equal(WorkRecordStatuses.Uninvoiced, record.Status);
+            Assert.Equal(Now, record.UpdatedAt);
+        });
         Assert.Equal(1, repository.SaveChangesCalls);
     }
 

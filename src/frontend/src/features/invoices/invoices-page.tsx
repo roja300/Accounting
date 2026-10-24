@@ -100,11 +100,11 @@ function WorkRecordCard({
 				aria-labelledby={`record-${record.id}`}
 			>
 				<CardHeader className="border-b">
-				{record.isExported && (
-					<span className="mb-1 w-fit rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-						Exported
-					</span>
-				)}
+					{record.isExported && (
+						<span className="mb-1 w-fit rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+							Exported
+						</span>
+					)}
 					<CardTitle
 						id={`record-${record.id}`}
 						className="pr-2 text-base"
@@ -133,16 +133,16 @@ function WorkRecordCard({
 								<Link
 									to={`/work/${record.id}/edit`}
 									role="menuitem"
-								aria-disabled={record.isExported}
-								onClick={(event) => {
-									if (record.isExported)
-										event.preventDefault();
-								}}
-								className={
-									record.isExported
-										? 'flex w-full cursor-not-allowed items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50'
-										: 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-								}
+									aria-disabled={record.isExported}
+									onClick={(event) => {
+										if (record.isExported)
+											event.preventDefault();
+									}}
+									className={
+										record.isExported
+											? 'flex w-full cursor-not-allowed items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50'
+											: 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+									}
 								>
 									<PencilIcon aria-hidden="true" />
 									Edit
@@ -204,10 +204,15 @@ function WorkRecordCard({
 			>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Delete work record?</DialogTitle>
+						<DialogTitle>
+							{record.isExported
+								? 'Remove work record from invoice?'
+								: 'Delete work record?'}
+						</DialogTitle>
 						<DialogDescription>
-							“{record.description}” will be hidden from your work
-							records.
+							{record.isExported
+								? `Warning: “${record.description}” is part of an exported invoice. Removing it will update that invoice's total and return the work record to uninvoiced work.`
+								: `“${record.description}” will be hidden from your work records.`}
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -225,7 +230,11 @@ function WorkRecordCard({
 							onClick={confirmDelete}
 							disabled={deleting}
 						>
-							{deleting ? 'Deleting…' : 'Delete work record'}
+							{deleting
+								? 'Updating…'
+								: record.isExported
+									? 'Remove from invoice'
+									: 'Delete work record'}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
@@ -526,7 +535,7 @@ export function InvoicesPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
 	const [deleteError, setDeleteError] = useState(false);
-	const [deletedDescription, setDeletedDescription] = useState<string>();
+	const [completedMessage, setCompletedMessage] = useState<string>();
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -578,10 +587,14 @@ export function InvoicesPage() {
 	}
 	async function removeRecord(record: WorkRecordDto) {
 		setDeleteError(false);
-		setDeletedDescription(undefined);
+		setCompletedMessage(undefined);
 		try {
 			await deleteWorkRecord(record.id);
-			setDeletedDescription(record.description);
+			setCompletedMessage(
+				record.isExported
+					? `“${record.description}” was removed from its invoice and is available to invoice again.`
+					: `“${record.description}” was deleted.`,
+			);
 			if (records?.items.length === 1 && page > 1) {
 				setPage((current) => current - 1);
 			} else {
@@ -662,12 +675,12 @@ export function InvoicesPage() {
 						The work record could not be deleted. Please try again.
 					</p>
 				)}
-				{deletedDescription && (
+				{completedMessage && (
 					<p
 						role="status"
 						className="mb-4 text-sm text-muted-foreground"
 					>
-						“{deletedDescription}” was deleted.
+						{completedMessage}
 					</p>
 				)}
 				<div aria-busy={loading}>

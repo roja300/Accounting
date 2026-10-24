@@ -19,6 +19,8 @@ internal sealed class StubInvoiceService : IInvoiceService
 
     public string? UpdatedStatus { get; private set; }
 
+    public Guid? DeletedInvoiceId { get; private set; }
+
     public InvoiceListQueryDto? ListQuery { get; private set; }
 
     public bool RejectClient { get; set; }
@@ -82,6 +84,13 @@ internal sealed class StubInvoiceService : IInvoiceService
         UpdatedStatus = status;
         InvoiceResponseDto? response = id == InvoiceId ? ToResponse(CreateInvoice()) : null;
         return Task.FromResult(response);
+    }
+
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        DeletedInvoiceId = id;
+        return Task.FromResult(id == InvoiceId);
     }
 
     public Task<InvoiceOptionsDto> GetOptionsAsync(CancellationToken cancellationToken)

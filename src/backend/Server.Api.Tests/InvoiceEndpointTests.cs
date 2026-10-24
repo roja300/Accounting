@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
-using Server.Invoices.Domain;
 
 namespace Server.Api.Tests;
 
@@ -184,7 +183,7 @@ public class InvoiceEndpointTests
     }
 
     [Fact]
-    public async Task ShouldMarkInvoiceDeleted_WhenInvoiceExists()
+    public async Task ShouldDeleteInvoice_WhenInvoiceExists()
     {
         var service = new StubInvoiceService();
         using var client = CreateClient(service);
@@ -194,8 +193,7 @@ public class InvoiceEndpointTests
             CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(StubInvoiceService.InvoiceId, service.StatusUpdatedInvoiceId);
-        Assert.Equal(WorkRecordStatuses.Deleted, service.UpdatedStatus);
+        Assert.Equal(StubInvoiceService.InvoiceId, service.DeletedInvoiceId);
     }
 
     [Fact]
