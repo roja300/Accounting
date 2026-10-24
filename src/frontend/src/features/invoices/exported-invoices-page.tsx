@@ -14,7 +14,7 @@ import {
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -171,26 +171,19 @@ function InvoiceCard({
 				</div>
 			</CardContent>
 			<CardFooter className="flex-wrap gap-2 border-t">
-				<Button
-					variant="outline"
-					size="sm"
-					render={
-						<a
-							href={generatedInvoicePdfUrl(invoice.id)}
-							aria-label={`Download ${invoice.invoiceNumber} PDF`}
-							target="_blank"
-							rel="noreferrer"
-						>
-							<span className="sr-only">
-								Download invoice PDF
-							</span>
-						</a>
-					}
-					nativeButton={false}
+				<a
+					href={generatedInvoicePdfUrl(invoice.id)}
+					aria-label={`Download ${invoice.invoiceNumber} PDF`}
+					target="_blank"
+					rel="noreferrer"
+					className={buttonVariants({
+						variant: 'outline',
+						size: 'sm',
+					})}
 				>
 					<DownloadIcon aria-hidden="true" />
 					PDF
-				</Button>
+				</a>
 				{!deleted && invoice.status === 'exported' && (
 					<Button
 						variant="outline"
@@ -238,8 +231,8 @@ function invoiceSummary(loading: boolean, data?: GeneratedInvoicePageDto) {
 
 function EmptyInvoiceState({ hasFilters }: { hasFilters: boolean }) {
 	return (
-		<Card className="items-center py-12 text-center">
-			<CardHeader>
+		<Card className="min-h-64 w-full justify-center py-12 text-center shadow-sm">
+			<CardHeader className="mx-auto w-full max-w-xl">
 				<CardTitle>
 					{hasFilters
 						? 'No matching invoices'
@@ -251,7 +244,7 @@ function EmptyInvoiceState({ hasFilters }: { hasFilters: boolean }) {
 						: 'Generate an invoice from your ready work records.'}
 				</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="flex justify-center">
 				<Button
 					render={<Link to="/invoices" />}
 					nativeButton={false}
