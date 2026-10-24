@@ -10,7 +10,9 @@ namespace Server.Invoices.Controllers;
 
 [ApiController]
 [Route("profile")]
-public sealed class ProfileController(IProfileService profileService) : ControllerBase
+public sealed class ProfileController(
+    IProfileService profileService,
+    IInvoiceDocumentService documentService) : ControllerBase
 {
     private const int MaximumLogoBytes = 2 * 1024 * 1024;
     private static readonly IReadOnlySet<string> SupportedLogoTypes = new HashSet<string>(
@@ -174,6 +176,25 @@ public sealed class ProfileController(IProfileService profileService) : Controll
     public async Task<ActionResult<InvoiceConfigurationResponseDto>> DeleteInvoiceLogo(
         CancellationToken cancellationToken) =>
         Ok(await profileService.DeleteInvoiceLogoAsync(cancellationToken));
+
+    [HttpGet("invoice-configuration/demo/{style}")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetInvoiceStyleDemonstration(
+        string style,
+        CancellationToken cancellationToken)
+    {
+        if (!InvoiceStyles.All.Contains(style))
+            return ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["style"] = ["Style must be basic, modern, or minimal."]
+            });
+        var logo = await profileService.GetInvoiceLogoAsync(cancellationToken);
+        return File(
+            documentService.GenerateDemonstration(style, logo?.Data),
+            "application/pdf");
+    }
 
     private ActionResult ValidationProblem(IReadOnlyDictionary<string, string[]> errors)
     {

@@ -117,6 +117,22 @@ public class ProfileEndpointTests
         Assert.Equal("image/png", service.SavedLogoContentType);
     }
 
+    [Fact]
+    public async Task ShouldReturnDemonstrationPdf_WhenInvoiceStyleIsSupported()
+    {
+        var service = new StubProfileService();
+        using var client = CreateClient(service);
+
+        var response = await client.GetAsync(
+            "/profile/invoice-configuration/demo/modern",
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+        var data = await response.Content.ReadAsByteArrayAsync(CancellationToken.None);
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(data, 0, 4));
+    }
+
     private static HttpClient CreateClient(StubProfileService service)
     {
         var factory = new WebApplicationFactory<Program>()

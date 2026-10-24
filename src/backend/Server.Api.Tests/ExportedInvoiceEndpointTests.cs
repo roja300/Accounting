@@ -125,6 +125,9 @@ public class ExportedInvoiceEndpointTests
             WasCalled = true;
             return "%PDF-test"u8.ToArray();
         }
+
+        public byte[] GenerateDemonstration(string style, byte[]? logoData) =>
+            "%PDF-demo"u8.ToArray();
     }
 
     private sealed class StubExportedInvoiceService : IExportedInvoiceService

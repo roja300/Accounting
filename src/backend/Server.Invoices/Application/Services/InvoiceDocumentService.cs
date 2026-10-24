@@ -8,6 +8,52 @@ namespace Server.Invoices.Application.Services;
 
 public sealed class InvoiceDocumentService : IInvoiceDocumentService
 {
+    private static readonly DateTimeOffset DemonstrationDate =
+        new(2026, 10, 24, 12, 0, 0, TimeSpan.Zero);
+
+    public byte[] GenerateDemonstration(string style, byte[]? logoData)
+    {
+        var project = new Project { Name = "Website redesign" };
+        var invoice = new GeneratedInvoice
+        {
+            InvoiceNumber = "INV-DEMO-001",
+            InvoiceStyle = style,
+            LogoData = logoData,
+            BusinessName = "Your Business",
+            BusinessEmail = "hello@yourbusiness.example",
+            BusinessPhone = "+44 20 7946 0123",
+            BusinessAddress = "10 Example Street, London, SW1A 1AA",
+            CompanyNumber = "12345678",
+            VatNumber = "GB123456789",
+            ClientName = "Example Client Ltd",
+            ClientEmail = "accounts@example-client.test",
+            ClientAddress = "25 Sample Road, Bristol, BS1 1AA",
+            IssueDate = new DateOnly(2026, 10, 24),
+            DueDate = new DateOnly(2026, 11, 23),
+            Currency = "GBP",
+            Subtotal = 1_500m,
+            Notes = "Thank you for your business.",
+            WorkRecords =
+            [
+                new Invoice
+                {
+                    Description = "Design and implementation",
+                    Value = 1_200m,
+                    Project = project,
+                    CreatedAt = DemonstrationDate
+                },
+                new Invoice
+                {
+                    Description = "Project support",
+                    Value = 300m,
+                    Project = project,
+                    CreatedAt = DemonstrationDate.AddMinutes(1)
+                }
+            ]
+        };
+        return Generate(invoice);
+    }
+
     public byte[] Generate(GeneratedInvoice invoice)
     {
         var style = InvoiceStyle.For(invoice.InvoiceStyle);

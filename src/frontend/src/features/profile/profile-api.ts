@@ -113,6 +113,10 @@ export async function deleteInvoiceLogo(): Promise<InvoiceConfigurationResponseD
 
 export const invoiceLogoUrl = `${profilePath}/invoice-configuration/logo`;
 
+export function invoiceStyleDemonstrationUrl(style: InvoiceStyle): string {
+	return `${profilePath}/invoice-configuration/demo/${style}`;
+}
+
 export function createClient(client: ClientDto): Promise<ClientResponseDto> {
 	return request(`${profilePath}/clients`, 'POST', client);
 }

@@ -164,6 +164,20 @@ test('should configure an invoice style and upload a logo', async ({
 
 	await page.goto('/profile');
 	await page.getByRole('button', { name: /Invoice configuration/ }).click();
+	const demoLinks = page.getByRole('link', { name: 'View demo PDF' });
+	await expect(demoLinks).toHaveCount(3);
+	await expect(demoLinks.nth(0)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/basic',
+	);
+	await expect(demoLinks.nth(1)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/modern',
+	);
+	await expect(demoLinks.nth(2)).toHaveAttribute(
+		'href',
+		'/api/profile/invoice-configuration/demo/minimal',
+	);
 	await page.getByText('Modern', { exact: true }).click();
 	await page.getByLabel('Upload logo').setInputFiles({
 		name: 'logo.png',

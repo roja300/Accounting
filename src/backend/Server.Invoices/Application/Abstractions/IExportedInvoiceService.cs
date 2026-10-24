@@ -28,4 +28,6 @@ public interface IExportedInvoiceService
 public interface IInvoiceDocumentService
 {
     byte[] Generate(GeneratedInvoice invoice);
+
+    byte[] GenerateDemonstration(string style, byte[]? logoData);
 }
