@@ -200,7 +200,8 @@ public sealed class InvoiceService(
             invoice.Comments,
             invoice.Client.Name,
             invoice.Project.Name,
-            invoice.CreatedAt);
+            invoice.CreatedAt,
+            invoice.GeneratedInvoiceId is not null);
     }
 }
 

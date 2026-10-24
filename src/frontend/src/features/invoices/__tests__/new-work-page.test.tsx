@@ -47,7 +47,7 @@ test('should submit a configured customer and navigate after confirming success'
 		screen.getByRole('option', { name: 'Pound sterling (GBP)' }),
 	);
 	await user.click(await screen.findByRole('combobox', { name: 'Customer' }));
-	await user.click(screen.getByRole('option', { name: 'Acme Ltd' }));
+	await user.click(await screen.findByRole('option', { name: 'Acme Ltd' }));
 	await user.type(
 		screen.getByRole('combobox', { name: 'Project' }),
 		'Retainer',
