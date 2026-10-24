@@ -20,10 +20,14 @@ public class Invoice : Entity
     public Guid ClientId { get; set; }
     
     public Guid ProjectId { get; set; }
+
+    public Guid? GeneratedInvoiceId { get; set; }
     
     public Client Client { get; set; } = null!;
     
     public Project Project { get; set; } = null!;
+
+    public GeneratedInvoice? GeneratedInvoice { get; set; }
 }
 
 public static class WorkRecordStatuses

@@ -1,6 +1,4 @@
-﻿# Tax Calculation
-
-*Date: 11/10/2026* <br>
+﻿*Date: 11/10/2026* <br>
 *Author: Rojaware*<br>
 
 ## Overview

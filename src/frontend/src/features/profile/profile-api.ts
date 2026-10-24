@@ -45,6 +45,15 @@ export interface ClientResponseDto extends ClientDto {
 	updatedAt: string;
 }
 
+export type InvoiceStyle = 'basic' | 'modern' | 'minimal';
+
+export interface InvoiceConfigurationResponseDto {
+	style: InvoiceStyle;
+	hasLogo: boolean;
+	logoFileName: string;
+	updatedAt?: string;
+}
+
 const profilePath = '/api/profile';
 
 export async function getBusinessProfile(
@@ -66,6 +75,46 @@ export async function getClients(
 ): Promise<ClientResponseDto[]> {
 	const response = await fetch(`${profilePath}/clients`, { signal });
 	return readResponse<ClientResponseDto[]>(response);
+}
+
+export async function getInvoiceConfiguration(
+	signal?: AbortSignal,
+): Promise<InvoiceConfigurationResponseDto> {
+	const response = await fetch(`${profilePath}/invoice-configuration`, {
+		signal,
+	});
+	return readResponse<InvoiceConfigurationResponseDto>(response);
+}
+
+export function saveInvoiceConfiguration(
+	style: InvoiceStyle,
+): Promise<InvoiceConfigurationResponseDto> {
+	return request(`${profilePath}/invoice-configuration`, 'PUT', { style });
+}
+
+export async function uploadInvoiceLogo(
+	logo: File,
+): Promise<InvoiceConfigurationResponseDto> {
+	const body = new FormData();
+	body.append('logo', logo);
+	const response = await fetch(`${profilePath}/invoice-configuration/logo`, {
+		method: 'PUT',
+		body,
+	});
+	return readResponse<InvoiceConfigurationResponseDto>(response);
+}
+
+export async function deleteInvoiceLogo(): Promise<InvoiceConfigurationResponseDto> {
+	const response = await fetch(`${profilePath}/invoice-configuration/logo`, {
+		method: 'DELETE',
+	});
+	return readResponse<InvoiceConfigurationResponseDto>(response);
+}
+
+export const invoiceLogoUrl = `${profilePath}/invoice-configuration/logo`;
+
+export function invoiceStyleDemonstrationUrl(style: InvoiceStyle): string {
+	return `${profilePath}/invoice-configuration/demo/${style}`;
 }
 
 export function createClient(client: ClientDto): Promise<ClientResponseDto> {

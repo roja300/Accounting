@@ -12,6 +12,8 @@ public sealed class ProfileService(
 {
     private static readonly Guid BusinessProfileId =
         Guid.Parse("00000000-0000-0000-0000-000000000001");
+    private static readonly Guid InvoiceConfigurationId =
+        Guid.Parse("00000000-0000-0000-0000-000000000002");
 
     public async Task<BusinessProfileResponseDto?> GetBusinessAsync(
         CancellationToken cancellationToken)
@@ -142,6 +144,80 @@ public sealed class ProfileService(
         return ClientDeleteResult.Deleted;
     }
 
+    public async Task<InvoiceConfigurationResponseDto> GetInvoiceConfigurationAsync(
+        CancellationToken cancellationToken)
+    {
+        var configuration = await context.InvoiceConfigurations
+            .AsNoTracking()
+            .SingleOrDefaultAsync(cancellationToken);
+        return configuration is null
+            ? new InvoiceConfigurationResponseDto(InvoiceStyles.Basic, false, string.Empty, null)
+            : Map(configuration);
+    }
+
+    public async Task<InvoiceConfigurationResponseDto> SaveInvoiceConfigurationAsync(
+        InvoiceConfigurationDto configuration,
+        CancellationToken cancellationToken)
+    {
+        var entity = await GetOrCreateInvoiceConfigurationAsync(cancellationToken);
+        entity.Style = configuration.Style;
+        entity.UpdatedAt = timeProvider.GetUtcNow();
+        await context.SaveChangesAsync(cancellationToken);
+        return Map(entity);
+    }
+
+    public async Task<InvoiceConfigurationResponseDto> SaveInvoiceLogoAsync(
+        byte[] data,
+        string contentType,
+        string fileName,
+        CancellationToken cancellationToken)
+    {
+        var entity = await GetOrCreateInvoiceConfigurationAsync(cancellationToken);
+        entity.LogoData = data;
+        entity.LogoContentType = contentType;
+        entity.LogoFileName = Path.GetFileName(fileName);
+        entity.UpdatedAt = timeProvider.GetUtcNow();
+        await context.SaveChangesAsync(cancellationToken);
+        return Map(entity);
+    }
+
+    public async Task<InvoiceLogoDto?> GetInvoiceLogoAsync(CancellationToken cancellationToken)
+    {
+        var entity = await context.InvoiceConfigurations.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+        return entity?.LogoData is null
+            ? null
+            : new InvoiceLogoDto(entity.LogoData, entity.LogoContentType, entity.LogoFileName);
+    }
+
+    public async Task<InvoiceConfigurationResponseDto> DeleteInvoiceLogoAsync(
+        CancellationToken cancellationToken)
+    {
+        var entity = await GetOrCreateInvoiceConfigurationAsync(cancellationToken);
+        entity.LogoData = null;
+        entity.LogoContentType = string.Empty;
+        entity.LogoFileName = string.Empty;
+        entity.UpdatedAt = timeProvider.GetUtcNow();
+        await context.SaveChangesAsync(cancellationToken);
+        return Map(entity);
+    }
+
+    private async Task<InvoiceConfiguration> GetOrCreateInvoiceConfigurationAsync(
+        CancellationToken cancellationToken)
+    {
+        var entity = await context.InvoiceConfigurations.SingleOrDefaultAsync(cancellationToken);
+        if (entity is not null) return entity;
+        var now = timeProvider.GetUtcNow();
+        entity = new InvoiceConfiguration
+        {
+            Id = InvoiceConfigurationId,
+            Style = InvoiceStyles.Basic,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        await context.InvoiceConfigurations.AddAsync(entity, cancellationToken);
+        return entity;
+    }
+
     private static void Apply(
         Client entity,
         ClientDto client,
@@ -193,6 +269,12 @@ public sealed class ProfileService(
         client.Postcode,
         client.CreatedAt,
         client.UpdatedAt);
+
+    private static InvoiceConfigurationResponseDto Map(InvoiceConfiguration configuration) => new(
+        configuration.Style,
+        configuration.LogoData is { Length: > 0 },
+        configuration.LogoFileName,
+        configuration.UpdatedAt);
 }
 
 public sealed class ClientNameConflictException : Exception;

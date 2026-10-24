@@ -4,13 +4,20 @@ using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
 using Server.Invoices.Application.Services;
 using Server.Invoices.Application.Validators;
+using Server.Invoices.Domain;
 
 namespace Server.Invoices.Controllers;
 
 [ApiController]
 [Route("profile")]
-public sealed class ProfileController(IProfileService profileService) : ControllerBase
+public sealed class ProfileController(
+    IProfileService profileService,
+    IInvoiceDocumentService documentService) : ControllerBase
 {
+    private const int MaximumLogoBytes = 2 * 1024 * 1024;
+    private static readonly IReadOnlySet<string> SupportedLogoTypes = new HashSet<string>(
+        ["image/png", "image/jpeg"],
+        StringComparer.OrdinalIgnoreCase);
     [HttpGet("business")]
     [ProducesResponseType<BusinessProfileResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -121,6 +128,72 @@ public sealed class ProfileController(IProfileService profileService) : Controll
                 Title = "This customer is used by a work record and cannot be deleted."
             })
         };
+    }
+
+    [HttpGet("invoice-configuration")]
+    public async Task<ActionResult<InvoiceConfigurationResponseDto>> GetInvoiceConfiguration(
+        CancellationToken cancellationToken) =>
+        Ok(await profileService.GetInvoiceConfigurationAsync(cancellationToken));
+
+    [HttpPut("invoice-configuration")]
+    public async Task<ActionResult<InvoiceConfigurationResponseDto>> SaveInvoiceConfiguration(
+        [FromBody] InvoiceConfigurationDto configuration,
+        CancellationToken cancellationToken)
+    {
+        if (!InvoiceStyles.All.Contains(configuration.Style))
+            return ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["style"] = ["Style must be basic, modern, or minimal."]
+            });
+        return Ok(await profileService.SaveInvoiceConfigurationAsync(configuration, cancellationToken));
+    }
+
+    [HttpGet("invoice-configuration/logo")]
+    public async Task<IActionResult> GetInvoiceLogo(CancellationToken cancellationToken)
+    {
+        var logo = await profileService.GetInvoiceLogoAsync(cancellationToken);
+        return logo is null ? NotFound() : File(logo.Data, logo.ContentType, logo.FileName);
+    }
+
+    [HttpPut("invoice-configuration/logo")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<InvoiceConfigurationResponseDto>> SaveInvoiceLogo(
+        IFormFile logo,
+        CancellationToken cancellationToken)
+    {
+        if (logo.Length is <= 0 or > MaximumLogoBytes || !SupportedLogoTypes.Contains(logo.ContentType))
+            return ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["logo"] = ["Choose a PNG or JPEG logo no larger than 2 MB."]
+            });
+        await using var stream = new MemoryStream();
+        await logo.CopyToAsync(stream, cancellationToken);
+        return Ok(await profileService.SaveInvoiceLogoAsync(
+            stream.ToArray(), logo.ContentType, logo.FileName, cancellationToken));
+    }
+
+    [HttpDelete("invoice-configuration/logo")]
+    public async Task<ActionResult<InvoiceConfigurationResponseDto>> DeleteInvoiceLogo(
+        CancellationToken cancellationToken) =>
+        Ok(await profileService.DeleteInvoiceLogoAsync(cancellationToken));
+
+    [HttpGet("invoice-configuration/demo/{style}")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetInvoiceStyleDemonstration(
+        string style,
+        CancellationToken cancellationToken)
+    {
+        if (!InvoiceStyles.All.Contains(style))
+            return ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["style"] = ["Style must be basic, modern, or minimal."]
+            });
+        var logo = await profileService.GetInvoiceLogoAsync(cancellationToken);
+        return File(
+            documentService.GenerateDemonstration(style, logo?.Data),
+            "application/pdf");
     }
 
     private ActionResult ValidationProblem(IReadOnlyDictionary<string, string[]> errors)
