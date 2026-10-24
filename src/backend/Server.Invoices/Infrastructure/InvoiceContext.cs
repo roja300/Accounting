@@ -18,6 +18,8 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
 
     public DbSet<GeneratedInvoice> GeneratedInvoices => Set<GeneratedInvoice>();
 
+    public DbSet<InvoiceConfiguration> InvoiceConfigurations => Set<InvoiceConfiguration>();
+
     public async Task<InvoiceQueryResult> QueryInvoicesAsync(
         InvoiceQuery query,
         CancellationToken cancellationToken)
@@ -136,6 +138,12 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
     public Task<BusinessProfile?> GetBusinessProfileAsync(CancellationToken cancellationToken)
     {
         return BusinessProfiles.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<InvoiceConfiguration?> GetInvoiceConfigurationAsync(
+        CancellationToken cancellationToken)
+    {
+        return InvoiceConfigurations.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
     }
 
     public Task<Client?> GetClientAsync(Guid id, CancellationToken cancellationToken)

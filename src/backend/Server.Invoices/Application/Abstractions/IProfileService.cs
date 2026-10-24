@@ -22,6 +22,24 @@ public interface IProfileService
         CancellationToken cancellationToken);
 
     Task<ClientDeleteResult> DeleteClientAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<InvoiceConfigurationResponseDto> GetInvoiceConfigurationAsync(
+        CancellationToken cancellationToken);
+
+    Task<InvoiceConfigurationResponseDto> SaveInvoiceConfigurationAsync(
+        InvoiceConfigurationDto configuration,
+        CancellationToken cancellationToken);
+
+    Task<InvoiceConfigurationResponseDto> SaveInvoiceLogoAsync(
+        byte[] data,
+        string contentType,
+        string fileName,
+        CancellationToken cancellationToken);
+
+    Task<InvoiceLogoDto?> GetInvoiceLogoAsync(CancellationToken cancellationToken);
+
+    Task<InvoiceConfigurationResponseDto> DeleteInvoiceLogoAsync(
+        CancellationToken cancellationToken);
 }
 
 public enum ClientDeleteResult

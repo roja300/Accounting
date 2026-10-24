@@ -286,9 +286,21 @@ namespace Server.Invoices.Infrastructure.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("invoice_number");
 
+                    b.Property<string>("InvoiceStyle")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("basic")
+                        .HasColumnName("invoice_style");
+
                     b.Property<DateOnly>("IssueDate")
                         .HasColumnType("date")
                         .HasColumnName("issue_date");
+
+                    b.Property<byte[]>("LogoData")
+                        .HasColumnType("bytea")
+                        .HasColumnName("logo_data");
 
                     b.Property<string>("Notes")
                         .IsRequired()
@@ -407,6 +419,53 @@ namespace Server.Invoices.Infrastructure.Migrations
                             t.HasCheckConstraint("ck_invoices_currency_supported", "currency IN ('GBP', 'EUR', 'USD')");
 
                             t.HasCheckConstraint("ck_invoices_value_positive", "value > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Invoices.Domain.InvoiceConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("LogoContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("logo_content_type");
+
+                    b.Property<byte[]>("LogoData")
+                        .HasColumnType("bytea")
+                        .HasColumnName("logo_data");
+
+                    b.Property<string>("LogoFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("logo_file_name");
+
+                    b.Property<string>("Style")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("style");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice_configuration");
+
+                    b.ToTable("invoice_configuration", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_invoice_configuration_singleton", "id = '00000000-0000-0000-0000-000000000002'");
+
+                            t.HasCheckConstraint("ck_invoice_configuration_style", "style IN ('basic', 'modern', 'minimal')");
                         });
                 });
 

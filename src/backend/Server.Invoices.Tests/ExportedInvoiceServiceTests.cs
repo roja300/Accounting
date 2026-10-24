@@ -19,6 +19,11 @@ public class ExportedInvoiceServiceTests
         var repository = new MockExportedInvoiceRepository
         {
             BusinessProfile = CreateBusinessProfile(),
+            InvoiceConfiguration = new InvoiceConfiguration
+            {
+                Style = InvoiceStyles.Modern,
+                LogoData = [1, 2, 3]
+            },
             Client = client,
             Project = project,
             EligibleWorkRecords = [first, second]
@@ -40,6 +45,8 @@ public class ExportedInvoiceServiceTests
         Assert.Equal(200m, saved.Subtotal);
         Assert.Equal("GBP", saved.Currency);
         Assert.Equal(GeneratedInvoiceStatuses.Exported, saved.Status);
+        Assert.Equal(InvoiceStyles.Modern, saved.InvoiceStyle);
+        Assert.Equal([1, 2, 3], saved.LogoData);
         Assert.Equal("Example Studio", saved.BusinessName);
         Assert.Equal("Acme Ltd", saved.ClientName);
         Assert.All([first, second], record => Assert.Equal(saved.Id, record.GeneratedInvoiceId));
@@ -85,13 +92,18 @@ public class ExportedInvoiceServiceTests
         Assert.Equal(1, repository.SaveChangesCalls);
     }
 
-    [Fact]
-    public void ShouldGeneratePdfDocument_WhenInvoiceHasWorkRecords()
+    [Theory]
+    [InlineData(InvoiceStyles.Basic)]
+    [InlineData(InvoiceStyles.Modern)]
+    [InlineData(InvoiceStyles.Minimal)]
+    public void ShouldGeneratePdfDocument_WhenInvoiceStyleIsConfigured(string style)
     {
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         var document = new InvoiceDocumentService();
+        var invoice = CreateGeneratedInvoice();
+        invoice.InvoiceStyle = style;
 
-        var bytes = document.Generate(CreateGeneratedInvoice());
+        var bytes = document.Generate(invoice);
 
         Assert.True(bytes.Length > 1_000);
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(bytes, 0, 4));

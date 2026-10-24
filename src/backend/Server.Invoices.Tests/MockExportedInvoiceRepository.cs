@@ -7,6 +7,8 @@ internal sealed class MockExportedInvoiceRepository : IExportedInvoiceRepository
 {
     public BusinessProfile? BusinessProfile { get; set; }
 
+    public InvoiceConfiguration? InvoiceConfiguration { get; set; }
+
     public Client? Client { get; set; }
 
     public Project? Project { get; set; }
@@ -25,6 +27,9 @@ internal sealed class MockExportedInvoiceRepository : IExportedInvoiceRepository
 
     public Task<BusinessProfile?> GetBusinessProfileAsync(CancellationToken cancellationToken) =>
         Task.FromResult(BusinessProfile);
+
+    public Task<InvoiceConfiguration?> GetInvoiceConfigurationAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(InvoiceConfiguration);
 
     public Task<Client?> GetClientAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Client?.Id == id ? Client : null);

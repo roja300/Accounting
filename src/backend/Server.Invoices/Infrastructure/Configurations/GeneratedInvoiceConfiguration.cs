@@ -26,6 +26,8 @@ public sealed class GeneratedInvoiceConfiguration : IEntityTypeConfiguration<Gen
         builder.Property(invoice => invoice.Subtotal).HasColumnName("subtotal").HasPrecision(12, 2).IsRequired();
         builder.Property(invoice => invoice.Notes).HasColumnName("notes").HasMaxLength(1_000).IsRequired();
         builder.Property(invoice => invoice.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+        builder.Property(invoice => invoice.InvoiceStyle).HasColumnName("invoice_style").HasMaxLength(20).HasDefaultValue(InvoiceStyles.Basic).IsRequired();
+        builder.Property(invoice => invoice.LogoData).HasColumnName("logo_data").HasColumnType("bytea");
         builder.Property(invoice => invoice.BusinessName).HasColumnName("business_name").HasMaxLength(150).IsRequired();
         builder.Property(invoice => invoice.BusinessEmail).HasColumnName("business_email").HasMaxLength(254).IsRequired();
         builder.Property(invoice => invoice.BusinessPhone).HasColumnName("business_phone").HasMaxLength(30).IsRequired();

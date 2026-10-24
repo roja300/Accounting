@@ -20,6 +20,10 @@ public sealed class GeneratedInvoice : Entity
 
     public string Status { get; set; } = GeneratedInvoiceStatuses.Exported;
 
+    public string InvoiceStyle { get; set; } = InvoiceStyles.Basic;
+
+    public byte[]? LogoData { get; set; }
+
     public string BusinessName { get; set; } = string.Empty;
 
     public string BusinessEmail { get; set; } = string.Empty;
