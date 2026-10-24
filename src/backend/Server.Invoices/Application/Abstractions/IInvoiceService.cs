@@ -22,5 +22,7 @@ public interface IInvoiceService
         string status,
         CancellationToken cancellationToken);
 
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
+
     Task<InvoiceOptionsDto> GetOptionsAsync(CancellationToken cancellationToken);
 }

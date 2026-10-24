@@ -33,3 +33,13 @@ Enabled the existing Delete card action with an accessible confirmation dialog, 
 
 1. Deletion is reversible at the data level through a future controlled status transition, but no restore action is exposed in this change.
 2. The repository-wide Biome check still reports pre-existing formatting and import-order diagnostics in untouched frontend files; all files changed by this request pass scoped Biome validation.
+
+#### [2026-10-24 17:17] Restored Work When Removing Exported Records
+
+Changed deletion of an exported work record to detach it from the exported invoice, recalculate that invoice's total, and return the work record to its original uninvoiced state. Deleting an exported invoice now detaches and restores all of its work records while hiding the deleted invoice from list and read queries.
+
+Added explicit confirmation warnings for both actions and removed deleted invoices from the visible status filter. Expanded service and browser coverage for detaching, restoring, recalculating, and hiding records.
+
+##### Comments
+
+1. No additional migration was required because the existing work-record status and generated-invoice relationship support these transitions.
