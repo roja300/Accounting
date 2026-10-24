@@ -6,6 +6,8 @@ public interface IExportedInvoiceRepository
 {
     Task<BusinessProfile?> GetBusinessProfileAsync(CancellationToken cancellationToken);
 
+    Task<InvoiceConfiguration?> GetInvoiceConfigurationAsync(CancellationToken cancellationToken);
+
     Task<Client?> GetClientAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Project?> GetProjectAsync(Guid id, CancellationToken cancellationToken);

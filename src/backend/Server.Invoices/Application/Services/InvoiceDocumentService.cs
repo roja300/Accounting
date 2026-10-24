@@ -10,6 +10,7 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
 {
     public byte[] Generate(GeneratedInvoice invoice)
     {
+        var style = InvoiceStyle.For(invoice.InvoiceStyle);
         return Document.Create(document =>
         {
             document.Page(page =>
@@ -21,7 +22,9 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
                 {
                     row.RelativeItem().Column(column =>
                     {
-                        column.Item().Text(invoice.BusinessName).FontSize(20).Bold().FontColor(Colors.Blue.Darken3);
+                        if (invoice.LogoData is { Length: > 0 })
+                            column.Item().Height(42).PaddingBottom(8).Image(invoice.LogoData).FitArea();
+                        column.Item().Text(invoice.BusinessName).FontSize(style.BusinessNameSize).Bold().FontColor(style.Accent);
                         column.Item().Text(invoice.BusinessAddress).FontColor(Colors.Grey.Darken1);
                         column.Item().Text(invoice.BusinessEmail).FontColor(Colors.Grey.Darken1);
                         if (!string.IsNullOrWhiteSpace(invoice.BusinessPhone))
@@ -38,7 +41,7 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
                 page.Content().PaddingVertical(28).Column(column =>
                 {
                     column.Spacing(20);
-                    column.Item().Background(Colors.Grey.Lighten4).Padding(14).Column(billTo =>
+                    column.Item().Background(style.BillToBackground).Padding(14).Column(billTo =>
                     {
                         billTo.Item().Text("BILL TO").Bold().FontColor(Colors.Grey.Darken1);
                         billTo.Item().Text(invoice.ClientName).Bold();
@@ -55,9 +58,9 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
                         });
                         table.Header(header =>
                         {
-                            HeaderCell(header.Cell(), "Description");
-                            HeaderCell(header.Cell(), "Project");
-                            HeaderCell(header.Cell().AlignRight(), "Amount");
+                            HeaderCell(header.Cell(), "Description", style);
+                            HeaderCell(header.Cell(), "Project", style);
+                            HeaderCell(header.Cell().AlignRight(), "Amount", style);
                         });
                         foreach (var record in invoice.WorkRecords.OrderBy(record => record.CreatedAt))
                         {
@@ -97,8 +100,13 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
         }).GeneratePdf();
     }
 
-    private static void HeaderCell(IContainer cell, string text) =>
-        cell.Background(Colors.Blue.Darken3).Padding(8).Text(text).Bold().FontColor(Colors.White);
+    private static void HeaderCell(IContainer cell, string text, InvoiceStyle style)
+    {
+        var header = cell.Background(style.HeaderBackground).Padding(8);
+        if (style.HeaderBorder)
+            header = header.BorderBottom(1).BorderColor(Colors.Grey.Darken2);
+        header.Text(text).Bold().FontColor(style.HeaderText);
+    }
 
     private static void BodyCell(IContainer cell, string text) =>
         cell.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(9).PaddingHorizontal(8).Text(text);
@@ -113,5 +121,39 @@ public sealed class InvoiceDocumentService : IInvoiceDocumentService
         if (!string.IsNullOrWhiteSpace(invoice.VatNumber))
             details.Add($"VAT no. {invoice.VatNumber}");
         return string.Join("  |  ", details);
+    }
+
+    private sealed record InvoiceStyle(
+        string Accent,
+        string HeaderBackground,
+        string HeaderText,
+        string BillToBackground,
+        float BusinessNameSize,
+        bool HeaderBorder)
+    {
+        public static InvoiceStyle For(string style) => style switch
+        {
+            InvoiceStyles.Modern => new(
+                Colors.Teal.Darken3,
+                Colors.Teal.Darken3,
+                Colors.White,
+                Colors.Teal.Lighten5,
+                24,
+                false),
+            InvoiceStyles.Minimal => new(
+                Colors.Grey.Darken4,
+                Colors.White,
+                Colors.Grey.Darken4,
+                Colors.White,
+                18,
+                true),
+            _ => new(
+                Colors.Blue.Darken3,
+                Colors.Blue.Darken3,
+                Colors.White,
+                Colors.Grey.Lighten4,
+                20,
+                false)
+        };
     }
 }

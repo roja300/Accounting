@@ -69,6 +69,8 @@ public sealed class ExportedInvoiceService(
                 "workRecords",
                 "No unexported work records match these options.");
 
+        var configuration = await repository.GetInvoiceConfigurationAsync(cancellationToken);
+
         var now = timeProvider.GetUtcNow();
         var id = Guid.NewGuid();
         var invoice = new GeneratedInvoice
@@ -82,6 +84,8 @@ public sealed class ExportedInvoiceService(
             Subtotal = workRecords.Sum(record => record.Value),
             Notes = request.Notes?.Trim() ?? string.Empty,
             Status = GeneratedInvoiceStatuses.Exported,
+            InvoiceStyle = configuration?.Style ?? InvoiceStyles.Basic,
+            LogoData = configuration?.LogoData?.ToArray(),
             BusinessName = string.IsNullOrWhiteSpace(business.TradingName)
                 ? business.LegalName
                 : business.TradingName,
