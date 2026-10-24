@@ -14,10 +14,11 @@ Editing work records.
 ### Non-functional Specification (NFS)
 
 1. The same patterns should be followed as with creating work records.
+2. Use the same status pattern as when work is marked as invoiced, however, they will be hidden from view.
 
 ## Notes
 
-- N/A
+- Use the same status function as when work is marked as invoiced.
 
 ### Codex Response
 
