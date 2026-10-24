@@ -238,6 +238,14 @@ namespace Server.Invoices.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("project_id");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("uninvoiced")
+                        .HasColumnName("status");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -259,6 +267,8 @@ namespace Server.Invoices.Infrastructure.Migrations
                     b.ToTable("invoices", null, t =>
                         {
                             t.HasCheckConstraint("ck_invoices_currency_supported", "currency IN ('GBP', 'EUR', 'USD')");
+
+                            t.HasCheckConstraint("ck_invoices_status_supported", "status IN ('uninvoiced', 'invoiced', 'deleted')");
 
                             t.HasCheckConstraint("ck_invoices_value_positive", "value > 0");
                         });

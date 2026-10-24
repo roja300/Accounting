@@ -20,7 +20,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         InvoiceQuery query,
         CancellationToken cancellationToken)
     {
-        var invoices = Invoices.AsNoTracking();
+        var invoices = Invoices
+            .AsNoTracking()
+            .Where(invoice => invoice.Status != WorkRecordStatuses.Deleted);
 
         if (query.CreatedOnOrAfter is not null)
         {
@@ -98,7 +100,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .AsNoTracking()
             .Include(invoice => invoice.Client)
             .Include(invoice => invoice.Project)
-            .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(
+                invoice => invoice.Id == id && invoice.Status != WorkRecordStatuses.Deleted,
+                cancellationToken);
     }
 
     public Task<Invoice?> GetInvoiceForUpdateAsync(
@@ -108,7 +112,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         return Invoices
             .Include(invoice => invoice.Client)
             .Include(invoice => invoice.Project)
-            .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(
+                invoice => invoice.Id == id && invoice.Status != WorkRecordStatuses.Deleted,
+                cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> GetClientNamesAsync(

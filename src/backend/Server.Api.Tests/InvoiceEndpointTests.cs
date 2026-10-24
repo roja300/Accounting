@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Server.Invoices.Application.Abstractions;
 using Server.Invoices.Application.Dtos;
+using Server.Invoices.Domain;
 
 namespace Server.Api.Tests;
 
@@ -177,6 +178,34 @@ public class InvoiceEndpointTests
         var response = await client.PutAsJsonAsync(
             $"/invoices/{Guid.NewGuid()}",
             CreateRequest(),
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ShouldMarkInvoiceDeleted_WhenInvoiceExists()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+
+        var response = await client.DeleteAsync(
+            $"/invoices/{StubInvoiceService.InvoiceId}",
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(StubInvoiceService.InvoiceId, service.StatusUpdatedInvoiceId);
+        Assert.Equal(WorkRecordStatuses.Deleted, service.UpdatedStatus);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFound_WhenDeletedInvoiceDoesNotExist()
+    {
+        var service = new StubInvoiceService();
+        using var client = CreateClient(service);
+
+        var response = await client.DeleteAsync(
+            $"/invoices/{Guid.NewGuid()}",
             CancellationToken.None);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
