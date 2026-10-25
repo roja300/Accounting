@@ -315,9 +315,9 @@ function InvoiceResults({
 	}
 
 	return (
-		<>
+		<div className="flex min-h-0 flex-1 flex-col">
 			<div
-				className="mb-4 min-h-6 text-sm text-muted-foreground"
+				className="mb-4 min-h-6 shrink-0 text-sm text-muted-foreground"
 				aria-live="polite"
 			>
 				{invoiceSummary(loading, data)}
@@ -330,7 +330,12 @@ function InvoiceResults({
 					{error}
 				</Card>
 			)}
-			{content}
+			<div
+				data-testid="invoice-card-scroll"
+				className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-1"
+			>
+				{content}
+			</div>
 			{data && data.totalItems > 0 && (
 				<nav
 					aria-label="Invoice pagination"
@@ -357,7 +362,7 @@ function InvoiceResults({
 					</Button>
 				</nav>
 			)}
-		</>
+		</div>
 	);
 }
 
@@ -447,10 +452,10 @@ export function ExportedInvoicesPage() {
 	return (
 		<section
 			aria-label="Exported invoices page"
-			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
+			className="h-full overflow-hidden bg-muted/30 px-4 py-6 sm:px-6 lg:px-8"
 		>
-			<div className="mx-auto w-full max-w-6xl">
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+			<div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col">
+				<div className="mb-6 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 					<div>
 						<p className="mb-2 text-sm font-medium text-muted-foreground">
 							Invoices
@@ -478,7 +483,7 @@ export function ExportedInvoicesPage() {
 					</div>
 				</div>
 
-				<Card className="mb-6 shadow-sm">
+				<Card className="mb-6 shrink-0 shadow-sm">
 					<CardHeader className="border-b">
 						<CardTitle>Filter invoices</CardTitle>
 						<CardDescription>

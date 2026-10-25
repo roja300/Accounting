@@ -137,6 +137,39 @@ test('should generate an invoice from the exported invoices page using named opt
 	expect(request?.currency).toBe('GBP');
 });
 
+test('should keep invoice cards inside a scrollable viewport region', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1200, height: 800 });
+	const invoices = Array.from({ length: 9 }, (_, index) => ({
+		...invoice,
+		id: `invoice-${index + 1}`,
+		invoiceNumber: `INV-202610-${String(index + 1).padStart(2, '0')}`,
+	}));
+	await page.route('**/api/exported-invoices**', (route) =>
+		route.fulfill({
+			json: {
+				items: invoices,
+				page: 1,
+				pageSize: 9,
+				totalItems: 9,
+				totalPages: 1,
+			},
+		}),
+	);
+
+	await page.goto('/invoices/exported');
+	const cardScroll = page.getByTestId('invoice-card-scroll');
+	await expect(cardScroll).toBeVisible();
+	const metrics = await cardScroll.evaluate((element) => ({
+		bottom: element.getBoundingClientRect().bottom,
+		clientHeight: element.clientHeight,
+		scrollHeight: element.scrollHeight,
+	}));
+	expect(metrics.bottom).toBeLessThanOrEqual(800);
+	expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+});
+
 test('should update payment status and confirm before deleting an invoice', async ({
 	page,
 }) => {

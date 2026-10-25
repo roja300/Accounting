@@ -10,9 +10,9 @@ import { TaxPage } from '@/features/tax/tax-page.tsx';
 
 export function App() {
 	return (
-		<div className="flex min-h-svh flex-col bg-background">
+		<div className="flex h-svh flex-col overflow-hidden bg-background">
 			<AppNavbar />
-			<main className="flex-1">
+			<main className="min-h-0 flex-1 overflow-auto">
 				<Routes>
 					<Route
 						path="/profile"
