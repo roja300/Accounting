@@ -5,8 +5,6 @@ page_key: getting-started
 description: Install and run Accounting locally with Docker Compose, PostgreSQL, ASP.NET Core, and React.
 ---
 
-<section class="page-hero"><div class="shell narrow"><p class="eyebrow">Getting started</p><h1>Local setup, without the guesswork.</h1><p class="lede">The recommended route uses Docker Compose to run PostgreSQL, the API, and the frontend together. You can be looking at the application in a few deliberate steps.</p></div></section>
-
 <div class="shell docs-layout">
   <aside class="contents" aria-label="On this page"><p>On this page</p><a href="#prerequisites">Prerequisites</a><a href="#clone-the-repository">Clone the repository</a><a href="#start-the-stack">Start the stack</a><a href="#open-the-application">Open the application</a><a href="#https-optional">HTTPS (optional)</a><a href="#stop-the-stack">Stop the stack</a></aside>
   <article class="prose">
@@ -35,7 +33,7 @@ docker compose --env-file .env.development up --build</code></pre></div>
 dotnet dev-certs https --trust
 dotnet dev-certs https --export-path certificates/tls.crt --format Pem --no-password
 docker compose --env-file .env.development -f compose.yaml -f compose.https.yaml up --build</code></pre></div>
-    <p>The HTTPS frontend is available at <code>https://localhost:3000</code> and the API at <code>https://localhost:8443</code>. See the repository README for Firefox certificate-store guidance.</p>
+    <p>The HTTPS frontend is available at <code>https://localhost:3000</code> and the API at <code>https://localhost:8443</code>. See the <a href="{{ '/developers/#local-https' | relative_url }}">developer guide</a> for certificate-store and local proxy guidance.</p>
 
     <h2 id="stop-the-stack">Stop the stack</h2>
     <div class="code-block"><div class="code-label">PowerShell</div><pre><code>docker compose --env-file .env.development down</code></pre></div>
