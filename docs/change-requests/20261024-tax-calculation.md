@@ -35,7 +35,7 @@ Implemented an editable UK estimate using the 2026/27 England, Wales and Norther
 
 Replaced the placeholder Tax page with responsive, accessible tax-year cards showing expected pay, total earned, the estimated amount to pay, and an Income Tax and National Insurance breakdown. Added a configuration dialog and clear draft/configured states.
 
-Added calculator and service unit tests, API endpoint tests, and browser tests covering card totals and tax-year configuration. The backend build and all 88 backend tests pass; frontend type-checking, all 14 unit tests, the production build, and both new browser tests pass. The repository-wide Biome check remains blocked by pre-existing formatting and import-style diagnostics in untouched files; focused Biome checks pass for all tax files changed here.
+Added calculator and service unit tests, API endpoint tests, and browser tests covering card totals and tax-year configuration. The backend build and all 87 backend tests pass; frontend type-checking, all 14 unit tests, the production build, and all 20 browser tests pass. The repository-wide Biome check remains blocked by pre-existing formatting and import-style diagnostics in untouched files; focused Biome checks pass for all tax files changed here.
 
 ##### Comments
 
