@@ -417,7 +417,7 @@ function FilterPanel({
 	onClear: () => void;
 }) {
 	return (
-		<Card className="mb-6 shadow-sm">
+		<Card className="mb-6 shrink-0 shadow-sm">
 			<CardHeader className="border-b">
 				<CardTitle>Filter payments</CardTitle>
 			</CardHeader>
@@ -656,10 +656,10 @@ export function PaymentsPage() {
 	return (
 		<section
 			aria-labelledby="payments-title"
-			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
+			className="h-full overflow-hidden bg-muted/30 px-4 py-6 sm:px-6 lg:px-8"
 		>
-			<div className="mx-auto w-full max-w-7xl">
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+			<div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col">
+				<div className="mb-6 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 					<div>
 						<p className="mb-2 text-sm font-medium text-muted-foreground">
 							Payments
@@ -717,7 +717,7 @@ export function PaymentsPage() {
 				/>
 				<div
 					aria-live="polite"
-					className="mb-4 flex min-h-6 items-center justify-between text-sm text-muted-foreground"
+					className="mb-4 flex min-h-6 shrink-0 items-center justify-between text-sm text-muted-foreground"
 				>
 					<p>{error ? '' : summary}</p>
 					{loading && <p>Loading payments…</p>}
@@ -725,17 +725,17 @@ export function PaymentsPage() {
 				{status && (
 					<p
 						role="status"
-						className="mb-4 text-sm text-muted-foreground"
+						className="mb-4 shrink-0 text-sm text-muted-foreground"
 					>
 						{status}
 					</p>
 				)}
 				<Card
-					className="overflow-hidden p-0 shadow-sm"
+					className="min-h-0 flex-1 overflow-hidden p-0 shadow-sm"
 					aria-busy={loading}
 				>
-					<Table>
-						<TableHeader>
+					<Table containerClassName="h-full overflow-auto overscroll-contain">
+						<TableHeader className="sticky top-0 z-10 bg-card">
 							<TableRow>
 								<TableHead>Date and time</TableHead>
 								<TableHead>Description</TableHead>
@@ -805,7 +805,7 @@ export function PaymentsPage() {
 				{!(loading || error) && payments && payments.totalItems > 0 && (
 					<nav
 						aria-label="Payment pagination"
-						className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+						className="mt-4 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
 					>
 						<div className="flex items-center gap-2">
 							<Label htmlFor="payment-page-size">
