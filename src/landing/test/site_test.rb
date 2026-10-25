@@ -1,5 +1,6 @@
 require "minitest/autorun"
 require "pathname"
+require "yaml"
 
 class LandingSiteTest < Minitest::Test
   ROOT = Pathname.new(__dir__).join("..").expand_path
@@ -42,6 +43,12 @@ class LandingSiteTest < Minitest::Test
 
   def test_site_source_scan_excludes_non_site_html
     refute_includes site_source_content, "non-site dependency fixture"
+  end
+
+  def test_jekyll_excludes_cached_dependencies
+    config = YAML.safe_load(ROOT.join("_config.yml").read)
+
+    assert_includes config.fetch("exclude"), "vendor"
   end
 
   def test_site_links_to_the_source_repository
