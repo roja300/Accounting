@@ -259,7 +259,7 @@ function FilterPanel({
 	onClear: () => void;
 }) {
 	return (
-		<Card className="mb-6 shadow-sm">
+		<Card className="mb-6 shrink-0 shadow-sm">
 			<CardHeader className="border-b">
 				<CardTitle>Filter work records</CardTitle>
 				<CardDescription>
@@ -617,10 +617,10 @@ export function InvoicesPage() {
 	return (
 		<section
 			aria-label="Invoices page"
-			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-10 sm:px-6 lg:px-8"
+			className="h-full overflow-hidden bg-muted/30 px-4 py-6 sm:px-6 lg:px-8"
 		>
-			<div className="mx-auto w-full max-w-6xl">
-				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+			<div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col">
+				<div className="mb-6 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 					<div>
 						<p className="mb-2 text-sm font-medium text-muted-foreground">
 							Invoices
@@ -662,7 +662,7 @@ export function InvoicesPage() {
 				/>
 				<div
 					aria-live="polite"
-					className="mb-4 flex min-h-6 items-center justify-between text-sm text-muted-foreground"
+					className="mb-4 flex min-h-6 shrink-0 items-center justify-between text-sm text-muted-foreground"
 				>
 					<p>{error ? '' : summary}</p>
 					{loading && <p>Loading work records...</p>}
@@ -683,7 +683,11 @@ export function InvoicesPage() {
 						{completedMessage}
 					</p>
 				)}
-				<div aria-busy={loading}>
+				<div
+					data-testid="work-record-card-scroll"
+					className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-1"
+					aria-busy={loading}
+				>
 					<Results
 						loading={loading}
 						error={error}

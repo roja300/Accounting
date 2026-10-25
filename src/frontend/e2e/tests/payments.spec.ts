@@ -143,6 +143,44 @@ test('should paginate payments and change the number of rows per page', async ({
 	expect(listRequests.at(-1)?.searchParams.get('pageSize')).toBe('10');
 });
 
+test('should scroll the payment table without scrolling the page', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1200, height: 800 });
+	await page.route('**/api/payments/imports', (route) =>
+		route.fulfill({ json: [paymentImport] }),
+	);
+	await page.route('**/api/payments?*', (route) =>
+		route.fulfill({
+			json: {
+				items: Array.from({ length: 25 }, (_, index) => ({
+					...payment,
+					id: `payment-${index + 1}`,
+					description: `Payment ${index + 1}`,
+				})),
+				page: 1,
+				pageSize: 25,
+				totalItems: 25,
+				totalPages: 1,
+			},
+		}),
+	);
+
+	await page.goto('/payments');
+	const tableScroll = page.locator('[data-slot="table-container"]');
+	await expect(tableScroll).toBeVisible();
+	const metrics = await tableScroll.evaluate((element) => ({
+		bottom: element.getBoundingClientRect().bottom,
+		clientHeight: element.clientHeight,
+		documentHeight: document.documentElement.scrollHeight,
+		scrollHeight: element.scrollHeight,
+		viewportHeight: window.innerHeight,
+	}));
+	expect(metrics.bottom).toBeLessThanOrEqual(metrics.viewportHeight);
+	expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+	expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.viewportHeight);
+});
+
 test('should delete payments by file, date, or entirely', async ({ page }) => {
 	const deleteRequests: string[] = [];
 	await routePaymentData(page);
