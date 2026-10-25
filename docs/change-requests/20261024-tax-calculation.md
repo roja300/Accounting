@@ -61,3 +61,14 @@ Separated expected-pay and received-payment readers behind focused interfaces an
 
 1. Negative or zero-value entries and non-GBP payments do not contribute to received tax income.
 
+#### [2026-10-25 13:53] Added Top-Bar Theme Control
+
+Added an accessible light and dark mode toggle beside the Business profile control in the application top bar. The control reflects the active colour mode with moon and sun icons, persists the selected theme through the existing theme provider, and includes a tooltip explaining that the D keyboard shortcut provides the same action.
+
+Added browser coverage for the tooltip, theme change, persisted preference, and existing keyboard shortcut. Focused Biome checks, frontend type-checking, all 14 unit tests, the production build, and the focused browser test pass.
+
+##### Comments
+
+1. The button uses the existing global theme state, so button clicks, keyboard changes, and cross-tab storage updates continue to share one preference.
+2. The repository-wide Biome check continues to report the pre-existing formatting and import-style baseline in untouched files; all files changed in this increment pass focused Biome checks.
+
