@@ -41,3 +41,13 @@ Added calculator and service unit tests, API endpoint tests, and browser tests c
 
 1. Defaults were verified against HMRC's published 2026/27 Income Tax and National Insurance rates. Scottish Income Tax, VAT, payments on account, student loans, capital gains, dividends, and return submission remain outside this change request.
 
+#### [2026-10-25 13:44] Aligned Tax Styling With Existing Pages
+
+Updated the Tax page to use the same layout and component patterns as Payments, Work records, Exported invoices, and Profile. The page now uses the standard section label and heading treatment, `max-w-6xl` content width, conventional shadcn card headers and footers, subtle status colours, consistent typography and spacing, and a contained scrolling card region that keeps the page within the application viewport. The configuration dialog now follows the spacing and grouped-form treatment used by the Profile dialogs.
+
+Added a browser regression test for contained tax-card scrolling. Frontend type-checking, all 14 unit tests, the production build, and all 3 focused Tax browser tests pass. Focused Biome checks pass for the changed files.
+
+##### Comments
+
+1. The existing repository-wide Biome baseline remains unchanged.
+

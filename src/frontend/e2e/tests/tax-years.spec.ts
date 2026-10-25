@@ -32,9 +32,12 @@ const taxYear = {
 	configuration,
 } as const;
 
-async function routeTaxYears(page: Page) {
+async function routeTaxYears(
+	page: Page,
+	taxYears: ReadonlyArray<typeof taxYear> = [taxYear],
+) {
 	await page.route('**/api/tax-years', (route) =>
-		route.fulfill({ json: [taxYear] }),
+		route.fulfill({ json: taxYears }),
 	);
 }
 
@@ -91,4 +94,32 @@ test('should configure employment and pension details for a draft tax year', asy
 	expect(savedBody?.employmentIncome).toBe(18000);
 	expect(savedBody?.employmentTaxPaid).toBe(1200);
 	expect(savedBody?.pensionContributions).toBe(2500);
+});
+
+test('should scroll tax-year cards without scrolling the page', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1200, height: 800 });
+	await routeTaxYears(
+		page,
+		Array.from({ length: 12 }, (_, index) => ({
+			...taxYear,
+			startYear: taxYear.startYear - index,
+		})),
+	);
+
+	await page.goto('/tax');
+	const cardScroll = page.getByTestId('tax-year-card-scroll');
+	await expect(cardScroll).toBeVisible();
+	const metrics = await cardScroll.evaluate((element) => ({
+		bottom: element.getBoundingClientRect().bottom,
+		clientHeight: element.clientHeight,
+		documentHeight: document.documentElement.scrollHeight,
+		scrollHeight: element.scrollHeight,
+		viewportHeight: window.innerHeight,
+	}));
+
+	expect(metrics.bottom).toBeLessThanOrEqual(metrics.viewportHeight);
+	expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+	expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.viewportHeight);
 });
