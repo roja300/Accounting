@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Server.Api.Health;
 using Server.Invoices;
+using Server.Payments;
 using Server.Shared.Modules;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ var httpsPort = builder.Configuration.GetValue<int?>("Https:Port");
 List<IModule> modules =
 [
     new InvoicesModule(),
+    new PaymentsModule(),
 ];
 
 foreach (var module in modules)
