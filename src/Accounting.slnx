@@ -6,10 +6,12 @@
   <Folder Name="/src/Modules/">
     <Project Path="backend/Server.Invoices/Server.Invoices.csproj" />
     <Project Path="backend/Server.Payments/Server.Payments.csproj" />
+    <Project Path="backend/Server.Tax/Server.Tax.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="backend/Server.Api.Tests/Server.Api.Tests.csproj" />
     <Project Path="backend/Server.Invoices.Tests/Server.Invoices.Tests.csproj" />
     <Project Path="backend/Server.Payments.Tests/Server.Payments.Tests.csproj" />
+    <Project Path="backend/Server.Tax.Tests/Server.Tax.Tests.csproj" />
   </Folder>
 </Solution>
