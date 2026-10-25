@@ -1,0 +1,25 @@
+---
+layout: default
+title: User guide
+page_key: guide
+description: Learn how to configure Accounting, record work, generate invoices, import payments, and review tax estimates.
+---
+
+<section class="page-hero"><div class="shell narrow"><p class="eyebrow">User guide</p><h1>A clear path through the application.</h1><p class="lede">Set up the details used on invoices, capture work as it happens, and let each completed step feed the next view.</p></div></section>
+
+<div class="shell docs-layout">
+  <aside class="contents" aria-label="On this page"><p>On this page</p><a href="#configure-your-profile">1. Configure your profile</a><a href="#record-completed-work">2. Record completed work</a><a href="#generate-an-invoice">3. Generate an invoice</a><a href="#import-bank-payments">4. Import bank payments</a><a href="#review-tax-estimates">5. Review tax estimates</a></aside>
+  <article class="prose guide-steps">
+    <section id="configure-your-profile"><span class="step-index">01</span><h2>Configure your profile</h2><p>Open the profile control in the top-right corner. Add your trading details, contact information, payment instructions, clients, projects, and invoice defaults. These values become the reusable source for future invoices.</p><ul><li>Use the business name and address that should appear on invoices.</li><li>Add clients before recording work for them.</li><li>Create projects when you want work and invoices grouped more precisely.</li></ul></section>
+
+    <section id="record-completed-work"><span class="step-index">02</span><h2>Record completed work</h2><p>Choose <strong>Work records</strong>, then <strong>New work record</strong>. Select a client, optionally select a project, describe the work, and enter the completed date, quantity, and rate. The total is calculated before saving.</p><div class="window-frame doc-screenshot"><div class="window-bar"><span></span><span></span><span></span><small>Work records</small></div><img src="{{ '/assets/images/work-records.png' | relative_url }}" alt="Work records screen with completed client work ready to invoice"></div><p>Use the filters to find records by text, client, project, date, or invoice status. Existing records can be edited until you are happy with the detail.</p></section>
+
+    <section id="generate-an-invoice"><span class="step-index">03</span><h2>Generate an invoice</h2><p>Open <strong>Invoices</strong> and choose <strong>Generate invoice</strong>. Select a client and, when useful, a project. Only work that is ready to invoice is offered. Review the result, download the PDF, and update its status when payment arrives.</p><div class="note"><strong>A dependable history</strong><p>Exported invoices remain available for download. If an invoice is deleted, its work records become available to invoice again.</p></div></section>
+
+    <section id="import-bank-payments"><span class="step-index">04</span><h2>Import bank payments</h2><p>Open <strong>Payments</strong> and select <strong>Import CSV</strong>. Choose a statement exported from your bank and confirm the import. Search, direction, file, and date filters make larger histories manageable.</p><div class="window-frame doc-screenshot"><div class="window-bar"><span></span><span></span><span></span><small>Payment activity</small></div><img src="{{ '/assets/images/payments-dashboard.png' | relative_url }}" alt="Payment activity table with search and direction filters"></div><p>If you import the wrong data, the delete action can target a particular imported file, a transaction date range, or all payments. Review the selected scope before confirming.</p></section>
+
+    <section id="review-tax-estimates"><span class="step-index">05</span><h2>Review tax estimates</h2><p>Open <strong>Tax</strong> to see UK tax-year cards derived from completed work and received payments. Each card shows expected pay, total earned, estimated Income Tax, Class 4 National Insurance, and the estimated amount to pay.</p><div class="window-frame doc-screenshot"><div class="window-bar"><span></span><span></span><span></span><small>Tax years</small></div><img src="{{ '/assets/images/tax-estimates.png' | relative_url }}" alt="Tax-year estimate card showing an estimated amount to pay and calculation breakdown"></div><p>Choose <strong>Configure tax year</strong> to add employment income, tax already paid, pension contributions, allowable expenses, and other allowances. Rates and thresholds are editable for planning.</p><div class="warning"><strong>Planning estimate</strong><p>VAT is not included, and the result is not a submitted tax return. Check the assumptions and use official guidance or professional advice when making tax decisions.</p></div></section>
+
+    <div class="next-card"><p class="eyebrow">Need implementation detail?</p><h2>The source is open.</h2><p>Inspect the application, tests, API contracts, and local deployment files in the GitHub repository.</p><a class="text-link" href="{{ site.github_url }}">Explore the repository <span aria-hidden="true">↗</span></a></div>
+  </article>
+</div>
