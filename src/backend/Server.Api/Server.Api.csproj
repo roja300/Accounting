@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Server.Invoices\Server.Invoices.csproj" />
     <ProjectReference Include="..\Server.Payments\Server.Payments.csproj" />
     <ProjectReference Include="..\Server.Shared\Server.Shared.csproj" />
+    <ProjectReference Include="..\Server.Tax\Server.Tax.csproj" />
   </ItemGroup>
 
     <ItemGroup>

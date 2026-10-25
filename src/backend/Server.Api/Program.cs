@@ -4,6 +4,7 @@ using Server.Api.Health;
 using Server.Invoices;
 using Server.Payments;
 using Server.Shared.Modules;
+using Server.Tax;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ List<IModule> modules =
 [
     new InvoicesModule(),
     new PaymentsModule(),
+    new TaxModule(),
 ];
 
 foreach (var module in modules)
