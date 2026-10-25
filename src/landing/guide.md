@@ -5,8 +5,6 @@ page_key: guide
 description: Learn how to configure Accounting, record work, generate invoices, import payments, and review tax estimates.
 ---
 
-<section class="page-hero"><div class="shell narrow"><p class="eyebrow">User guide</p><h1>A clear path through the application.</h1><p class="lede">Set up the details used on invoices, capture work as it happens, and let each completed step feed the next view.</p></div></section>
-
 <div class="shell docs-layout">
   <aside class="contents" aria-label="On this page"><p>On this page</p><a href="#configure-your-profile">1. Configure your profile</a><a href="#record-completed-work">2. Record completed work</a><a href="#generate-an-invoice">3. Generate an invoice</a><a href="#import-bank-payments">4. Import bank payments</a><a href="#review-tax-estimates">5. Review tax estimates</a></aside>
   <article class="prose guide-steps">
