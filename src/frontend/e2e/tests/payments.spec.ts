@@ -102,6 +102,47 @@ test('should import a bank csv and report completion', async ({ page }) => {
 	).toBeVisible();
 });
 
+test('should paginate payments and change the number of rows per page', async ({
+	page,
+}) => {
+	const listRequests: URL[] = [];
+	await page.route('**/api/payments/imports', (route) =>
+		route.fulfill({ json: [paymentImport] }),
+	);
+	await page.route('**/api/payments?*', async (route) => {
+		const url = new URL(route.request().url());
+		listRequests.push(url);
+		const requestedPage = Number(url.searchParams.get('page'));
+		const requestedPageSize = Number(url.searchParams.get('pageSize'));
+		await route.fulfill({
+			json: {
+				items: [payment],
+				page: requestedPage,
+				pageSize: requestedPageSize,
+				totalItems: 51,
+				totalPages: Math.ceil(51 / requestedPageSize),
+			},
+		});
+	});
+
+	await page.goto('/payments');
+	const pagination = page.getByRole('navigation', {
+		name: 'Payment pagination',
+	});
+	await expect(pagination.getByText('Page 1 of 3')).toBeVisible();
+	await pagination.getByRole('button', { name: 'Next' }).click();
+	await expect(pagination.getByText('Page 2 of 3')).toBeVisible();
+
+	await pagination.getByRole('combobox', { name: 'Rows per page' }).click();
+	await page.getByRole('option', { name: '10', exact: true }).click();
+
+	await expect(pagination.getByText('Page 1 of 6')).toBeVisible();
+	await expect
+		.poll(() => listRequests.at(-1)?.searchParams.get('page'))
+		.toBe('1');
+	expect(listRequests.at(-1)?.searchParams.get('pageSize')).toBe('10');
+});
+
 test('should delete payments by file, date, or entirely', async ({ page }) => {
 	const deleteRequests: string[] = [];
 	await routePaymentData(page);

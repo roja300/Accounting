@@ -54,7 +54,8 @@ import {
 	type PaymentPageDto,
 } from '@/features/payments/payment-api';
 
-const PAGE_SIZE = 25;
+const DEFAULT_PAGE_SIZE = 25;
+const pageSizeOptions = [10, 25, 50] as const;
 const emptyFilters = {
 	dateAfter: '',
 	dateBefore: '',
@@ -597,6 +598,7 @@ export function PaymentsPage() {
 	const [payments, setPayments] = useState<PaymentPageDto>();
 	const [imports, setImports] = useState<PaymentImportDto[]>([]);
 	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
 	const [refresh, setRefresh] = useState(0);
@@ -620,7 +622,7 @@ export function PaymentsPage() {
 			...appliedFilters,
 			direction: appliedFilters.direction,
 			page,
-			pageSize: PAGE_SIZE,
+			pageSize,
 		};
 		getPayments(filters, controller.signal)
 			.then(setPayments)
@@ -637,7 +639,7 @@ export function PaymentsPage() {
 				if (!controller.signal.aborted) setLoading(false);
 			});
 		return () => controller.abort();
-	}, [appliedFilters, page, refresh]);
+	}, [appliedFilters, page, pageSize, refresh]);
 
 	const summary = useMemo(() => {
 		if (!payments || payments.totalItems === 0) return 'No payments';
@@ -800,30 +802,63 @@ export function PaymentsPage() {
 						</TableBody>
 					</Table>
 				</Card>
-				{!(loading || error) && payments && payments.totalPages > 1 && (
+				{!(loading || error) && payments && payments.totalItems > 0 && (
 					<nav
 						aria-label="Payment pagination"
-						className="mt-6 flex items-center justify-between"
+						className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
 					>
-						<Button
-							variant="outline"
-							onClick={() => setPage((value) => value - 1)}
-							disabled={page <= 1}
-						>
-							<ChevronLeftIcon aria-hidden="true" />
-							Previous
-						</Button>
-						<p className="text-sm text-muted-foreground">
-							Page {payments.page} of {payments.totalPages}
-						</p>
-						<Button
-							variant="outline"
-							onClick={() => setPage((value) => value + 1)}
-							disabled={page >= payments.totalPages}
-						>
-							Next
-							<ChevronRightIcon aria-hidden="true" />
-						</Button>
+						<div className="flex items-center gap-2">
+							<Label htmlFor="payment-page-size">
+								Rows per page
+							</Label>
+							<Select
+								value={pageSize.toString()}
+								onValueChange={(value) => {
+									setPageSize(
+										Number(value ?? DEFAULT_PAGE_SIZE),
+									);
+									setPage(1);
+								}}
+							>
+								<SelectTrigger
+									id="payment-page-size"
+									className="w-20"
+								>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{pageSizeOptions.map((option) => (
+										<SelectItem
+											key={option}
+											value={option.toString()}
+										>
+											{option}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="flex items-center justify-between gap-3 sm:justify-end">
+							<Button
+								variant="outline"
+								onClick={() => setPage((value) => value - 1)}
+								disabled={page <= 1}
+							>
+								<ChevronLeftIcon aria-hidden="true" />
+								Previous
+							</Button>
+							<p className="text-sm whitespace-nowrap text-muted-foreground">
+								Page {payments.page} of {payments.totalPages}
+							</p>
+							<Button
+								variant="outline"
+								onClick={() => setPage((value) => value + 1)}
+								disabled={page >= payments.totalPages}
+							>
+								Next
+								<ChevronRightIcon aria-hidden="true" />
+							</Button>
+						</div>
 					</nav>
 				)}
 			</div>
