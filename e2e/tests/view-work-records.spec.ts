@@ -71,6 +71,7 @@ async function mockInvoiceApi(page: Page) {
 test('should show work records as cards and paginate them', async ({
 	page,
 }) => {
+	await page.setViewportSize({ width: 1200, height: 800 });
 	await mockInvoiceApi(page);
 	await page.goto('/invoices');
 
@@ -79,6 +80,17 @@ test('should show work records as cards and paginate them', async ({
 		page.getByRole('heading', { name: 'Work records' }),
 	).toBeVisible();
 	await expect(page.getByText('1-9 of 10 work records')).toBeVisible();
+	const cardScroll = page.getByTestId('work-record-card-scroll');
+	await expect(cardScroll).toBeVisible();
+	const cardScrollMetrics = await cardScroll.evaluate((element) => ({
+		bottom: element.getBoundingClientRect().bottom,
+		clientHeight: element.clientHeight,
+		scrollHeight: element.scrollHeight,
+	}));
+	expect(cardScrollMetrics.bottom).toBeLessThanOrEqual(800);
+	expect(cardScrollMetrics.scrollHeight).toBeGreaterThan(
+		cardScrollMetrics.clientHeight,
+	);
 
 	await page.getByRole('button', { name: 'Next' }).click();
 	await expect(page.getByText('Page 2 of 2')).toBeVisible();
