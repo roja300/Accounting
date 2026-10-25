@@ -45,6 +45,8 @@ public sealed class PaymentController(
             return ValidationProblem(new Dictionary<string, string[]> { ["file"] = ["The CSV file must be 10 MB or smaller."] });
         if (!string.Equals(Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
             return ValidationProblem(new Dictionary<string, string[]> { ["file"] = ["The selected file must use the .csv extension."] });
+        if (Path.GetFileName(file.FileName).Length > 255)
+            return ValidationProblem(new Dictionary<string, string[]> { ["file"] = ["The CSV file name must be 255 characters or fewer."] });
 
         await using var stream = file.OpenReadStream();
         var result = await paymentService.ImportAsync(stream, file.FileName, cancellationToken);
