@@ -22,6 +22,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -32,6 +40,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import {
+	deleteWorkRecord,
 	getWorkRecordOptions,
 	getWorkRecords,
 	type WorkRecordDto,
@@ -61,109 +70,176 @@ function formatValue(record: WorkRecordDto) {
 	}).format(record.value);
 }
 
-function WorkRecordCard({ record }: { record: WorkRecordDto }) {
+function WorkRecordCard({
+	record,
+	onDelete,
+}: {
+	record: WorkRecordDto;
+	onDelete: (record: WorkRecordDto) => Promise<void>;
+}) {
+	const [confirmingDelete, setConfirmingDelete] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+
+	async function confirmDelete() {
+		setDeleting(true);
+		try {
+			await onDelete(record);
+			setConfirmingDelete(false);
+		} catch {
+			// The page displays the request error while the dialog remains open.
+		} finally {
+			setDeleting(false);
+		}
+	}
+
 	return (
-		<Card
-			className="relative h-full shadow-sm transition-shadow hover:shadow-md"
-			role="article"
-			aria-labelledby={`record-${record.id}`}
-		>
-			<CardHeader className="border-b">
-				{record.isExported && (
-					<span className="mb-1 w-fit rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-						Exported
-					</span>
-				)}
-				<CardTitle
-					id={`record-${record.id}`}
-					className="pr-2 text-base"
-				>
-					{record.description}
-				</CardTitle>
-				<CardDescription>
-					Recorded {dateFormatter.format(new Date(record.createdAt))}
-				</CardDescription>
-				<div className="absolute top-4 right-4">
-					<details className="relative">
-						<summary
-							className="flex size-8 cursor-pointer list-none items-center justify-center rounded-lg text-muted-foreground hover:bg-muted [&::-webkit-details-marker]:hidden"
-							aria-label={`Actions for ${record.description}`}
-						>
-							<EllipsisVerticalIcon
+		<>
+			<Card
+				className="relative h-full shadow-sm transition-shadow hover:shadow-md"
+				role="article"
+				aria-labelledby={`record-${record.id}`}
+			>
+				<CardHeader className="border-b">
+					{record.isExported && (
+						<span className="mb-1 w-fit rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+							Exported
+						</span>
+					)}
+					<CardTitle
+						id={`record-${record.id}`}
+						className="pr-2 text-base"
+					>
+						{record.description}
+					</CardTitle>
+					<CardDescription>
+						Recorded{' '}
+						{dateFormatter.format(new Date(record.createdAt))}
+					</CardDescription>
+					<div className="absolute top-4 right-4">
+						<details className="relative">
+							<summary
+								className="flex size-8 cursor-pointer list-none items-center justify-center rounded-lg text-muted-foreground hover:bg-muted [&::-webkit-details-marker]:hidden"
+								aria-label={`Actions for ${record.description}`}
+							>
+								<EllipsisVerticalIcon
+									className="size-4"
+									aria-hidden="true"
+								/>
+							</summary>
+							<div
+								className="absolute top-9 right-0 z-10 w-40 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
+								role="menu"
+							>
+								<Link
+									to={`/work/${record.id}/edit`}
+									role="menuitem"
+									aria-disabled={record.isExported}
+									onClick={(event) => {
+										if (record.isExported)
+											event.preventDefault();
+									}}
+									className={
+										record.isExported
+											? 'flex w-full cursor-not-allowed items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50'
+											: 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+									}
+								>
+									<PencilIcon aria-hidden="true" />
+									Edit
+								</Link>
+								<button
+									type="button"
+									role="menuitem"
+									onClick={() => setConfirmingDelete(true)}
+									className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-destructive hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								>
+									<Trash2Icon aria-hidden="true" />
+									Delete
+								</button>
+							</div>
+						</details>
+					</div>
+				</CardHeader>
+				<CardContent className="flex flex-1 flex-col gap-4">
+					<div className="grid gap-3 text-sm text-muted-foreground">
+						<div className="flex items-center gap-2">
+							<Building2Icon
 								className="size-4"
 								aria-hidden="true"
 							/>
-						</summary>
-						<div
-							className="absolute top-9 right-0 z-10 w-40 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
-							role="menu"
-						>
-							<Link
-								to={`/work/${record.id}/edit`}
-								role="menuitem"
-								aria-disabled={record.isExported}
-								onClick={(event) => {
-									if (record.isExported)
-										event.preventDefault();
-								}}
-								className={
-									record.isExported
-										? 'flex w-full cursor-not-allowed items-center gap-2 rounded px-2 py-1.5 text-left text-sm opacity-50'
-										: 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-								}
-							>
-								<PencilIcon aria-hidden="true" />
-								Edit
-							</Link>
-							<button
-								type="button"
-								role="menuitem"
-								disabled
-								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-destructive opacity-50"
-							>
-								<Trash2Icon aria-hidden="true" />
-								Delete
-							</button>
+							<span className="truncate">{record.client}</span>
 						</div>
-					</details>
-				</div>
-			</CardHeader>
-			<CardContent className="flex flex-1 flex-col gap-4">
-				<div className="grid gap-3 text-sm text-muted-foreground">
-					<div className="flex items-center gap-2">
-						<Building2Icon
-							className="size-4"
-							aria-hidden="true"
-						/>
-						<span className="truncate">{record.client}</span>
+						<div className="flex items-center gap-2">
+							<FolderKanbanIcon
+								className="size-4"
+								aria-hidden="true"
+							/>
+							<span className="truncate">{record.project}</span>
+						</div>
+						<div className="flex items-center gap-2">
+							<CalendarDaysIcon
+								className="size-4"
+								aria-hidden="true"
+							/>
+							<span>
+								{dateFormatter.format(
+									new Date(record.createdAt),
+								)}
+							</span>
+						</div>
 					</div>
-					<div className="flex items-center gap-2">
-						<FolderKanbanIcon
-							className="size-4"
-							aria-hidden="true"
-						/>
-						<span className="truncate">{record.project}</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<CalendarDaysIcon
-							className="size-4"
-							aria-hidden="true"
-						/>
-						<span>
-							{dateFormatter.format(new Date(record.createdAt))}
-						</span>
-					</div>
-				</div>
-				{record.comments && (
-					<p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-						{record.comments}
+					{record.comments && (
+						<p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+							{record.comments}
+						</p>
+					)}
+					<p className="mt-auto text-xl font-semibold tracking-tight">
+						{formatValue(record)}
 					</p>
-				)}
-				<p className="mt-auto text-xl font-semibold tracking-tight">
-					{formatValue(record)}
-				</p>
-			</CardContent>
-		</Card>
+				</CardContent>
+			</Card>
+			<Dialog
+				open={confirmingDelete}
+				onOpenChange={setConfirmingDelete}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>
+							{record.isExported
+								? 'Remove work record from invoice?'
+								: 'Delete work record?'}
+						</DialogTitle>
+						<DialogDescription>
+							{record.isExported
+								? `Warning: “${record.description}” is part of an exported invoice. Removing it will update that invoice's total and return the work record to uninvoiced work.`
+								: `“${record.description}” will be hidden from your work records.`}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => setConfirmingDelete(false)}
+							disabled={deleting}
+						>
+							Cancel
+						</Button>
+						<Button
+							type="button"
+							variant="destructive"
+							onClick={confirmDelete}
+							disabled={deleting}
+						>
+							{deleting
+								? 'Updating…'
+								: record.isExported
+									? 'Remove from invoice'
+									: 'Delete work record'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
 
@@ -327,6 +403,7 @@ function Results({
 	hasFilters,
 	onRetry,
 	onClear,
+	onDelete,
 }: {
 	loading: boolean;
 	error: boolean;
@@ -334,6 +411,7 @@ function Results({
 	hasFilters: boolean;
 	onRetry: () => void;
 	onClear: () => void;
+	onDelete: (record: WorkRecordDto) => Promise<void>;
 }) {
 	if (loading)
 		return (
@@ -397,6 +475,7 @@ function Results({
 				<WorkRecordCard
 					key={record.id}
 					record={record}
+					onDelete={onDelete}
 				/>
 			))}
 		</div>
@@ -455,6 +534,8 @@ export function InvoicesPage() {
 	const [retryCount, setRetryCount] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
+	const [deleteError, setDeleteError] = useState(false);
+	const [completedMessage, setCompletedMessage] = useState<string>();
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -503,6 +584,26 @@ export function InvoicesPage() {
 		setDraftFilters(emptyFilters);
 		setAppliedFilters(emptyFilters);
 		setPage(1);
+	}
+	async function removeRecord(record: WorkRecordDto) {
+		setDeleteError(false);
+		setCompletedMessage(undefined);
+		try {
+			await deleteWorkRecord(record.id);
+			setCompletedMessage(
+				record.isExported
+					? `“${record.description}” was removed from its invoice and is available to invoice again.`
+					: `“${record.description}” was deleted.`,
+			);
+			if (records?.items.length === 1 && page > 1) {
+				setPage((current) => current - 1);
+			} else {
+				setRetryCount((count) => count + 1);
+			}
+		} catch (requestError) {
+			setDeleteError(true);
+			throw requestError;
+		}
 	}
 
 	const hasFilters = Object.values(appliedFilters).some(Boolean);
@@ -566,6 +667,22 @@ export function InvoicesPage() {
 					<p>{error ? '' : summary}</p>
 					{loading && <p>Loading work records...</p>}
 				</div>
+				{deleteError && (
+					<p
+						role="alert"
+						className="mb-4 text-sm text-destructive"
+					>
+						The work record could not be deleted. Please try again.
+					</p>
+				)}
+				{completedMessage && (
+					<p
+						role="status"
+						className="mb-4 text-sm text-muted-foreground"
+					>
+						{completedMessage}
+					</p>
+				)}
 				<div aria-busy={loading}>
 					<Results
 						loading={loading}
@@ -574,6 +691,7 @@ export function InvoicesPage() {
 						hasFilters={hasFilters}
 						onRetry={() => setRetryCount((count) => count + 1)}
 						onClear={clearFilters}
+						onDelete={removeRecord}
 					/>
 				</div>
 				<Pagination

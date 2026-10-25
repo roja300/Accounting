@@ -24,7 +24,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         InvoiceQuery query,
         CancellationToken cancellationToken)
     {
-        var invoices = Invoices.AsNoTracking();
+        var invoices = Invoices
+            .AsNoTracking()
+            .Where(invoice => invoice.Status != WorkRecordStatuses.Deleted);
 
         if (query.CreatedOnOrAfter is not null)
         {
@@ -102,7 +104,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .AsNoTracking()
             .Include(invoice => invoice.Client)
             .Include(invoice => invoice.Project)
-            .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(
+                invoice => invoice.Id == id && invoice.Status != WorkRecordStatuses.Deleted,
+                cancellationToken);
     }
 
     public Task<Invoice?> GetInvoiceForUpdateAsync(
@@ -112,7 +116,11 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         return Invoices
             .Include(invoice => invoice.Client)
             .Include(invoice => invoice.Project)
-            .SingleOrDefaultAsync(invoice => invoice.Id == id, cancellationToken);
+            .Include(invoice => invoice.GeneratedInvoice)
+            .ThenInclude(generatedInvoice => generatedInvoice!.WorkRecords)
+            .SingleOrDefaultAsync(
+                invoice => invoice.Id == id && invoice.Status != WorkRecordStatuses.Deleted,
+                cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> GetClientNamesAsync(
@@ -167,6 +175,7 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .Where(invoice =>
                 invoice.ClientId == clientId &&
                 invoice.GeneratedInvoiceId == null &&
+                invoice.Status == WorkRecordStatuses.Uninvoiced &&
                 invoice.Currency == currency);
 
         if (projectId is not null)
@@ -184,7 +193,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         CancellationToken cancellationToken)
     {
         return await Clients.AsNoTracking()
-            .Where(client => client.Invoices.Any(invoice => invoice.GeneratedInvoiceId == null))
+            .Where(client => client.Invoices.Any(invoice =>
+                invoice.GeneratedInvoiceId == null &&
+                invoice.Status == WorkRecordStatuses.Uninvoiced))
             .OrderBy(client => client.Name)
             .ToListAsync(cancellationToken);
     }
@@ -193,7 +204,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         CancellationToken cancellationToken)
     {
         return await Projects.AsNoTracking()
-            .Where(project => project.Invoices.Any(invoice => invoice.GeneratedInvoiceId == null))
+            .Where(project => project.Invoices.Any(invoice =>
+                invoice.GeneratedInvoiceId == null &&
+                invoice.Status == WorkRecordStatuses.Uninvoiced))
             .OrderBy(project => project.Name)
             .ToListAsync(cancellationToken);
     }
@@ -214,6 +227,8 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
             .Include(invoice => invoice.WorkRecords)
             .ThenInclude(workRecord => workRecord.Project)
             .Where(invoice => invoice.Id == id);
+        if (!forUpdate)
+            query = query.Where(invoice => invoice.Status != GeneratedInvoiceStatuses.Deleted);
         return forUpdate
             ? query.SingleOrDefaultAsync(cancellationToken)
             : query.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
@@ -223,7 +238,9 @@ public sealed class InvoiceContext(DbContextOptions<InvoiceContext> options)
         GeneratedInvoiceQuery query,
         CancellationToken cancellationToken)
     {
-        var invoices = GeneratedInvoices.AsNoTracking();
+        var invoices = GeneratedInvoices
+            .AsNoTracking()
+            .Where(invoice => invoice.Status != GeneratedInvoiceStatuses.Deleted);
         if (query.DateAfter is not null)
             invoices = invoices.Where(invoice => invoice.IssueDate >= query.DateAfter);
         if (query.DateBefore is not null)

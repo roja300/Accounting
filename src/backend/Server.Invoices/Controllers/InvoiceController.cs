@@ -114,6 +114,16 @@ public sealed class InvoiceController(
         }
     }
 
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        return await invoiceService.DeleteAsync(id, cancellationToken)
+            ? NoContent()
+            : NotFound();
+    }
+
     private ActionResult ClientNotConfigured()
     {
         return ValidationProblem(new ValidationProblemDetails(new Dictionary<string, string[]>

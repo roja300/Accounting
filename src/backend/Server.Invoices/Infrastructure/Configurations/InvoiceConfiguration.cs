@@ -14,6 +14,9 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
             tableBuilder.HasCheckConstraint(
                 "ck_invoices_currency_supported",
                 "currency IN ('GBP', 'EUR', 'USD')");
+            tableBuilder.HasCheckConstraint(
+                "ck_invoices_status_supported",
+                "status IN ('uninvoiced', 'invoiced', 'deleted')");
         });
 
         builder.HasKey(invoice => invoice.Id).HasName("pk_invoices");
@@ -37,6 +40,11 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(invoice => invoice.Comments)
             .HasColumnName("comments")
             .HasMaxLength(1_000)
+            .IsRequired();
+        builder.Property(invoice => invoice.Status)
+            .HasColumnName("status")
+            .HasMaxLength(20)
+            .HasDefaultValue(WorkRecordStatuses.Uninvoiced)
             .IsRequired();
         builder.Property(invoice => invoice.ClientId)
             .HasColumnName("client_id")

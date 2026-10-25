@@ -1,6 +1,4 @@
-﻿# [Insert Title]
-
-*Date: 11/10/2026* <br>
+﻿*Date: 11/10/2026* <br>
 *Author: Rojaware*<br>
 
 ## Overview
@@ -10,12 +8,13 @@ This work item should include information for calculating tax.
 ### Functional Specification (FS)
 
 1. The system should provide a means for calculating tax per year.
-2. The system should provide a page for displaying tax.
+2. The system should provide a page for displaying tax per year, as cards.
 3. The tax calculation should be ongoing as work records are completed, and invoices are paid.
-4. The system should display both expected pay, and the amount that needs to be paid.
-5. The system should display each tax year as a card.
-6. The system should provide a means for configuring the tax.
-7. The system should enable importing payments on the payments page.
+4. The system should display both expected pay, and the amount that needs to be paid, and total earned for the year, on each card.
+5. The system should calculate tax per year, as cards.
+6. The system should enable importing payments on the payments page.
+7. The system should use a UK based tax calculation, which can be configured per year.
+8. The system should provide each tax year as draft, and then be configured for the necessary information.
 
 ### Non-functional Specification (NFS)
 

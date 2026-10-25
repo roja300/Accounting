@@ -116,6 +116,7 @@ public sealed class ExportedInvoiceService(
         {
             record.GeneratedInvoiceId = invoice.Id;
             record.GeneratedInvoice = invoice;
+            record.Status = WorkRecordStatuses.Invoiced;
             record.UpdatedAt = now;
         }
 
@@ -143,8 +144,21 @@ public sealed class ExportedInvoiceService(
         if (invoice is null) return null;
         if (invoice.Status == GeneratedInvoiceStatuses.Deleted && status != GeneratedInvoiceStatuses.Deleted)
             throw new InvoiceExportException("status", "A deleted invoice cannot be restored.");
+        var now = timeProvider.GetUtcNow();
         invoice.Status = status;
-        invoice.UpdatedAt = timeProvider.GetUtcNow();
+        invoice.UpdatedAt = now;
+        if (status == GeneratedInvoiceStatuses.Deleted)
+        {
+            foreach (var record in invoice.WorkRecords.ToList())
+            {
+                record.GeneratedInvoiceId = null;
+                record.GeneratedInvoice = null;
+                record.Status = WorkRecordStatuses.Uninvoiced;
+                record.UpdatedAt = now;
+            }
+
+            invoice.WorkRecords.Clear();
+        }
         await repository.SaveChangesAsync(cancellationToken);
         return Map(invoice);
     }
