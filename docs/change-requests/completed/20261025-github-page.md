@@ -44,3 +44,12 @@ Added a version-controlled Rider run configuration named `Serve Landing Site` an
 1. Docker Desktop must be installed and running before the Rider configuration is started.
 2. Validated the shared XML and PowerShell syntax, launched the exact script used by Rider, verified the landing page returned HTTP 200 with the expected title, and confirmed stopping the process removed the preview container without creating generated repository output.
 3. All 4 landing-site source tests with 25 assertions and the strict Jekyll build pass after excluding the local launcher from published output.
+
+#### [2026-10-25 17:33] Corrected Rider Script Resolution
+
+Changed `Serve Landing Site` from Rider's Shell Script configuration type to its PowerShell configuration type. The Shell Script runner validates the unexpanded `$PROJECT_DIR$` value as a literal filesystem path; the PowerShell runner instead expands the project working directory and invokes the checked-in launcher through a relative path.
+
+##### Comments
+
+1. Rider's PowerShell plugin must be enabled. The plugin is installed in the development environment used to reproduce the original “Shell script not found” error.
+2. Validated the PowerShell configuration type and project-relative path, ran the resulting command from the project directory, verified HTTP 200 with the expected page title, and confirmed clean shutdown.

@@ -6,7 +6,7 @@ This directory contains the Jekyll source for the Accounting GitHub Pages site. 
 
 ### Rider
 
-Select **Serve Landing Site** from Rider's run configuration menu and run it. The shared configuration starts the Docker-based Jekyll preview and exposes it at `http://localhost:4000/`. Docker Desktop must be running; Ruby does not need to be installed locally.
+Select **Serve Landing Site** from Rider's run configuration menu and run it. The shared PowerShell configuration starts the Docker-based Jekyll preview and exposes it at `http://localhost:4000/`. Docker Desktop must be running; Ruby does not need to be installed locally. If the configuration is unavailable, enable Rider's PowerShell plugin and reload the project.
 
 Stop the run configuration to stop and remove the preview container. The first run downloads the Ruby image and installs the Jekyll dependencies into the reusable `accounting-landing-gems` Docker volume.
 
