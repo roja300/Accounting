@@ -16,7 +16,7 @@ class LandingSiteTest < Minitest::Test
   end
 
   def test_required_markdown_pages_have_front_matter
-    %w[index.md getting-started.md guide.md 404.md].each do |relative_path|
+    %w[index.md getting-started.md guide.md developers.md 404.md].each do |relative_path|
       content = ROOT.join(relative_path).read
       assert content.start_with?("---\n"), "#{relative_path} must start with Jekyll front matter"
       assert_operator content.scan(/^---$/).length, :>=, 2, "#{relative_path} must close its front matter"
@@ -55,5 +55,12 @@ class LandingSiteTest < Minitest::Test
     config = ROOT.join("_config.yml").read
     assert_includes config, "github_url: \"https://github.com/roja300/Accounting\""
     assert_includes ROOT.join("index.md").read, "site.github_url"
+  end
+
+  def test_repository_readme_points_to_published_documentation
+    readme = ROOT.join("../..", "README.md").read
+
+    assert_includes readme, "https://roja300.github.io/Accounting/"
+    assert_includes readme, "https://roja300.github.io/Accounting/developers/"
   end
 end
