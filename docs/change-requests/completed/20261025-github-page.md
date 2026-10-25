@@ -53,3 +53,11 @@ Changed `Serve Landing Site` from Rider's Shell Script configuration type to its
 
 1. Rider's PowerShell plugin must be enabled. The plugin is installed in the development environment used to reproduce the original “Shell script not found” error.
 2. Validated the PowerShell configuration type and project-relative path, ran the resulting command from the project directory, verified HTTP 200 with the expected page title, and confirmed clean shutdown.
+
+#### [2026-10-25 17:35] Aligned the Rider Path With the Solution Directory
+
+Corrected the shared Rider profile to resolve the launcher relative to `src`, which Rider uses as `$PROJECT_DIR$` because `Accounting.slnx` is located there. The profile now invokes `landing/scripts/serve.ps1` instead of incorrectly looking for `src/landing/scripts/serve.ps1` beneath the solution directory.
+
+##### Comments
+
+1. Validated the exact solution-relative PowerShell command from `C:\_Dev\Accounting\src`, verified HTTP 200 with the expected `Overview · Accounting` title, and confirmed the preview container stopped cleanly.

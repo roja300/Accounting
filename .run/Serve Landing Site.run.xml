@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Serve Landing Site" type="PowerShellRunType" factoryName="PowerShell" scriptUrl="src/landing/scripts/serve.ps1" workingDirectory="$PROJECT_DIR$" commandOptions="-NoProfile -ExecutionPolicy Bypass" executablePath="powershell.exe">
+  <configuration default="false" name="Serve Landing Site" type="PowerShellRunType" factoryName="PowerShell" scriptUrl="landing/scripts/serve.ps1" workingDirectory="$PROJECT_DIR$" commandOptions="-NoProfile -ExecutionPolicy Bypass" executablePath="powershell.exe">
     <envs />
     <method v="2" />
   </configuration>
