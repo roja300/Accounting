@@ -35,7 +35,7 @@ docker compose --env-file .env.development up --build</code></pre></div>
 dotnet dev-certs https --trust
 dotnet dev-certs https --export-path certificates/tls.crt --format Pem --no-password
 docker compose --env-file .env.development -f compose.yaml -f compose.https.yaml up --build</code></pre></div>
-    <p>The HTTPS frontend is available at <code>https://localhost:3000</code> and the API at <code>https://localhost:8443</code>. See the repository README for Firefox certificate-store guidance.</p>
+    <p>The HTTPS frontend is available at <code>https://localhost:3000</code> and the API at <code>https://localhost:8443</code>. See the <a href="{{ '/developers/#local-https' | relative_url }}">developer guide</a> for certificate-store and local proxy guidance.</p>
 
     <h2 id="stop-the-stack">Stop the stack</h2>
     <div class="code-block"><div class="code-label">PowerShell</div><pre><code>docker compose --env-file .env.development down</code></pre></div>
