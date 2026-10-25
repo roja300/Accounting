@@ -24,13 +24,13 @@ public sealed class CsvPaymentParser
     private static readonly string[] DateHeaders = ["date", "transactiondate", "completeddate"];
     private static readonly string[] DateTimeHeaders = ["datetime", "timestamp", "transactiondatetime", "starteddate"];
     private static readonly string[] TimeHeaders = ["time", "transactiontime"];
-    private static readonly string[] DescriptionHeaders = ["description", "narrative", "merchant", "notes", "type"];
+    private static readonly string[] DescriptionHeaders = ["description", "transactiondescription", "narrative", "memo", "merchant", "notes", "type", "transactiontype"];
     private static readonly string[] CounterpartyHeaders = ["from", "payer", "paidby", "counterparty", "counterpartyname", "name", "merchant"];
     private static readonly string[] ReferenceHeaders = ["reference", "paymentreference", "transactionid", "id"];
-    private static readonly string[] AmountHeaders = ["amount", "transactionamount", "amountgbp"];
+    private static readonly string[] AmountHeaders = ["amount", "transactionamount", "amountgbp", "value"];
     private static readonly string[] PenceHeaders = ["amountpence"];
-    private static readonly string[] CreditHeaders = ["credit", "moneyin", "paidin"];
-    private static readonly string[] DebitHeaders = ["debit", "moneyout", "paidout"];
+    private static readonly string[] CreditHeaders = ["credit", "creditamount", "moneyin", "paidin"];
+    private static readonly string[] DebitHeaders = ["debit", "debitamount", "moneyout", "paidout"];
     private static readonly string[] BalanceHeaders = ["balance", "runningbalance"];
     private static readonly string[] CurrencyHeaders = ["currency", "currencycode"];
     private static readonly string[] DateFormats = ["yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "d-M-yyyy", "MM/dd/yyyy", "M/d/yyyy"];
