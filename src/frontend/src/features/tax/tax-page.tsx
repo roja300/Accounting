@@ -1,11 +1,569 @@
+import { PencilIcon } from 'lucide-react';
+import { type FormEvent, useEffect, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+	configureTaxYear,
+	getTaxYears,
+	type TaxYear,
+	type TaxYearConfiguration,
+} from '@/features/tax/tax-api';
+import { cn } from '@/lib/utils';
+
+const money = new Intl.NumberFormat('en-GB', {
+	style: 'currency',
+	currency: 'GBP',
+});
+
 export function TaxPage() {
+	const [taxYears, setTaxYears] = useState<TaxYear[]>([]);
+	const [selected, setSelected] = useState<TaxYear>();
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState('');
+
+	useEffect(() => {
+		const controller = new AbortController();
+		getTaxYears(controller.signal)
+			.then(setTaxYears)
+			.catch((reason: unknown) => {
+				if (!controller.signal.aborted) {
+					setError(
+						reason instanceof Error
+							? reason.message
+							: 'Unable to load tax years.',
+					);
+				}
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) setLoading(false);
+			});
+		return () => controller.abort();
+	}, []);
+
 	return (
 		<section
-            aria-label="Tax page"
-            className="min-h-[calc(100svh-4rem)]"
-        >
-            Meow meow meow meow
-        </section>
+			aria-label="Tax page"
+			className="h-full overflow-hidden bg-muted/30 px-4 py-6 sm:px-6 lg:px-8"
+		>
+			<div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col">
+				<div className="mb-6 shrink-0">
+					<p className="mb-2 text-sm font-medium text-muted-foreground">
+						Tax
+					</p>
+					<h1 className="text-3xl font-semibold tracking-tight">
+						Tax years
+					</h1>
+					<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+						Review ongoing UK tax estimates from completed work and
+						received payments.
+					</p>
+				</div>
+
+				<Card className="mb-6 shrink-0 shadow-sm">
+					<CardHeader>
+						<CardTitle>About these estimates</CardTitle>
+						<CardDescription>
+							Figures use GBP work records and received payments,
+							with England, Wales and Northern Ireland defaults.
+							Configure each draft with your employment, pension
+							and allowance details. VAT is not included, and the
+							result is not a submitted tax return.
+						</CardDescription>
+					</CardHeader>
+				</Card>
+
+				<div
+					aria-live="polite"
+					className="mb-4 flex min-h-6 shrink-0 items-center justify-between text-sm text-muted-foreground"
+				>
+					<p>
+						{!(loading || error)
+							? `${taxYears.length} tax ${taxYears.length === 1 ? 'year' : 'years'}`
+							: ''}
+					</p>
+					{loading && <p role="status">Loading tax years…</p>}
+				</div>
+				{error && (
+					<p
+						role="alert"
+						className="mb-4 shrink-0 text-sm text-destructive"
+					>
+						{error}
+					</p>
+				)}
+				<div
+					data-testid="tax-year-card-scroll"
+					className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-1"
+					aria-busy={loading}
+				>
+					{!(loading || error) && taxYears.length > 0 && (
+						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{taxYears.map((taxYear) => (
+								<TaxYearCard
+									key={taxYear.startYear}
+									taxYear={taxYear}
+									onConfigure={setSelected}
+								/>
+							))}
+						</div>
+					)}
+					{!(loading || error) && taxYears.length === 0 && (
+						<Card className="min-h-64 w-full justify-center py-12 text-center shadow-sm">
+							<CardHeader className="mx-auto w-full max-w-xl">
+								<CardTitle>No tax years yet</CardTitle>
+								<CardDescription>
+									Tax years will appear as work is recorded
+									and invoices are paid.
+								</CardDescription>
+							</CardHeader>
+						</Card>
+					)}
+				</div>
+			</div>
+
+			{selected && (
+				<TaxConfigurationDialog
+					taxYear={selected}
+					onClose={() => setSelected(undefined)}
+					onSaved={(saved) => {
+						setTaxYears((current) =>
+							current.map((item) =>
+								item.startYear === saved.startYear
+									? saved
+									: item,
+							),
+						);
+						setSelected(undefined);
+					}}
+				/>
+			)}
+		</section>
 	);
 }
-    
+
+function TaxYearCard({
+	taxYear,
+	onConfigure,
+}: {
+	taxYear: TaxYear;
+	onConfigure: (taxYear: TaxYear) => void;
+}) {
+	return (
+		<Card
+			className="h-full shadow-sm transition-shadow hover:shadow-md"
+			role="article"
+			aria-labelledby={`tax-year-${taxYear.startYear}`}
+		>
+			<CardHeader className="border-b">
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<h2
+							id={`tax-year-${taxYear.startYear}`}
+							className="font-heading text-base leading-snug font-medium"
+						>
+							{taxYear.startYear}/
+							{String(taxYear.startYear + 1).slice(-2)} tax year
+						</h2>
+						<CardDescription className="mt-1">
+							6 April {taxYear.startYear} – 5 April{' '}
+							{taxYear.startYear + 1}
+						</CardDescription>
+					</div>
+					<span
+						className={cn(
+							'shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize',
+							taxYear.status === 'configured'
+								? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+								: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+						)}
+					>
+						{taxYear.status}
+					</span>
+				</div>
+			</CardHeader>
+			<CardContent className="flex flex-1 flex-col gap-5">
+				<div>
+					<p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+						Estimated amount to pay
+					</p>
+					<p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
+						{money.format(taxYear.amountToPay)}
+					</p>
+				</div>
+				<div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/50 p-3">
+					<Figure
+						label="Expected pay"
+						value={taxYear.expectedPay}
+					/>
+					<Figure
+						label="Total earned"
+						value={taxYear.totalEarned}
+					/>
+				</div>
+				<dl className="space-y-2 border-t pt-4 text-sm">
+					<Breakdown
+						label="Income Tax"
+						value={taxYear.estimatedIncomeTax}
+					/>
+					<Breakdown
+						label="Class 4 National Insurance"
+						value={taxYear.estimatedNationalInsurance}
+					/>
+				</dl>
+			</CardContent>
+			<CardFooter className="border-t">
+				<Button
+					className="w-full"
+					variant="outline"
+					size="sm"
+					onClick={() => onConfigure(taxYear)}
+				>
+					<PencilIcon
+						className="size-4"
+						aria-hidden="true"
+					/>
+					Configure tax year
+				</Button>
+			</CardFooter>
+		</Card>
+	);
+}
+
+function Figure({ label, value }: { label: string; value: number }) {
+	return (
+		<div>
+			<p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+				{label}
+			</p>
+			<p className="mt-1 font-semibold tabular-nums">
+				{money.format(value)}
+			</p>
+		</div>
+	);
+}
+
+function Breakdown({ label, value }: { label: string; value: number }) {
+	return (
+		<div className="flex justify-between gap-3">
+			<dt className="text-muted-foreground">{label}</dt>
+			<dd className="font-medium tabular-nums">{money.format(value)}</dd>
+		</div>
+	);
+}
+
+function TaxConfigurationDialog({
+	taxYear,
+	onClose,
+	onSaved,
+}: {
+	taxYear: TaxYear;
+	onClose: () => void;
+	onSaved: (taxYear: TaxYear) => void;
+}) {
+	const [configuration, setConfiguration] = useState(taxYear.configuration);
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState('');
+
+	async function submit(event: FormEvent) {
+		event.preventDefault();
+		setSaving(true);
+		setError('');
+		try {
+			onSaved(await configureTaxYear(taxYear.startYear, configuration));
+		} catch (reason) {
+			setError(
+				reason instanceof Error
+					? reason.message
+					: 'Unable to save the tax year.',
+			);
+		} finally {
+			setSaving(false);
+		}
+	}
+
+	function update(
+		field: keyof TaxYearConfiguration,
+		value: string,
+		percent = false,
+	) {
+		const parsed = Number(value);
+		setConfiguration((current) => ({
+			...current,
+			[field]: Number.isFinite(parsed)
+				? percent
+					? parsed / 100
+					: parsed
+				: 0,
+		}));
+	}
+
+	return (
+		<Dialog
+			open
+			onOpenChange={(open) => !open && onClose()}
+		>
+			<DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
+				<form onSubmit={submit}>
+					<DialogHeader>
+						<DialogTitle>
+							Configure {taxYear.startYear}/
+							{String(taxYear.startYear + 1).slice(-2)}
+						</DialogTitle>
+						<DialogDescription>
+							Add other income and reliefs, then review the
+							editable UK calculation defaults.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="grid gap-5 py-6">
+						<fieldset className="grid gap-5 sm:grid-cols-2">
+							<legend className="mb-4 text-sm font-semibold">
+								Your tax-year details
+							</legend>
+							<MoneyField
+								label="Employment income"
+								field="employmentIncome"
+								value={configuration.employmentIncome}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Tax already paid through employment"
+								field="employmentTaxPaid"
+								value={configuration.employmentTaxPaid}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Pension contributions"
+								field="pensionContributions"
+								value={configuration.pensionContributions}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Allowable business expenses"
+								field="allowableExpenses"
+								value={configuration.allowableExpenses}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Other tax-free allowances"
+								field="additionalAllowances"
+								value={configuration.additionalAllowances}
+								onChange={update}
+							/>
+						</fieldset>
+
+						<details className="rounded-xl border bg-muted/30 p-4">
+							<summary className="cursor-pointer text-sm font-semibold">
+								UK rates and thresholds
+							</summary>
+							<div className="mt-5 grid gap-5 sm:grid-cols-2">
+								<MoneyField
+									label="Personal allowance"
+									field="personalAllowance"
+									value={configuration.personalAllowance}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Allowance taper threshold"
+									field="personalAllowanceTaperThreshold"
+									value={
+										configuration.personalAllowanceTaperThreshold
+									}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Basic-rate band"
+									field="basicRateLimit"
+									value={configuration.basicRateLimit}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Additional-rate threshold"
+									field="higherRateLimit"
+									value={configuration.higherRateLimit}
+									onChange={update}
+								/>
+								<RateField
+									label="Basic rate"
+									field="basicRate"
+									value={configuration.basicRate}
+									onChange={update}
+								/>
+								<RateField
+									label="Higher rate"
+									field="higherRate"
+									value={configuration.higherRate}
+									onChange={update}
+								/>
+								<RateField
+									label="Additional rate"
+									field="additionalRate"
+									value={configuration.additionalRate}
+									onChange={update}
+								/>
+								<MoneyField
+									label="NI lower profits limit"
+									field="nationalInsuranceLowerLimit"
+									value={
+										configuration.nationalInsuranceLowerLimit
+									}
+									onChange={update}
+								/>
+								<MoneyField
+									label="NI upper profits limit"
+									field="nationalInsuranceUpperLimit"
+									value={
+										configuration.nationalInsuranceUpperLimit
+									}
+									onChange={update}
+								/>
+								<RateField
+									label="NI main rate"
+									field="nationalInsuranceMainRate"
+									value={
+										configuration.nationalInsuranceMainRate
+									}
+									onChange={update}
+								/>
+								<RateField
+									label="NI additional rate"
+									field="nationalInsuranceAdditionalRate"
+									value={
+										configuration.nationalInsuranceAdditionalRate
+									}
+									onChange={update}
+								/>
+							</div>
+						</details>
+					</div>
+
+					{error && (
+						<p
+							role="alert"
+							className="mb-4 text-sm text-destructive"
+						>
+							{error}
+						</p>
+					)}
+					<DialogFooter>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onClose}
+						>
+							Cancel
+						</Button>
+						<Button
+							type="submit"
+							disabled={saving}
+						>
+							{saving ? 'Saving…' : 'Save configuration'}
+						</Button>
+					</DialogFooter>
+				</form>
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+type UpdateConfiguration = (
+	field: keyof TaxYearConfiguration,
+	value: string,
+	percent?: boolean,
+) => void;
+
+function MoneyField({
+	label,
+	field,
+	value,
+	onChange,
+}: {
+	label: string;
+	field: keyof TaxYearConfiguration;
+	value: number;
+	onChange: UpdateConfiguration;
+}) {
+	return (
+		<NumberField
+			label={label}
+			field={field}
+			value={value}
+			step="0.01"
+			onChange={onChange}
+		/>
+	);
+}
+
+function RateField({
+	label,
+	field,
+	value,
+	onChange,
+}: {
+	label: string;
+	field: keyof TaxYearConfiguration;
+	value: number;
+	onChange: UpdateConfiguration;
+}) {
+	return (
+		<NumberField
+			label={`${label} (%)`}
+			field={field}
+			value={value * 100}
+			step="0.01"
+			percent
+			onChange={onChange}
+		/>
+	);
+}
+
+function NumberField({
+	label,
+	field,
+	value,
+	step,
+	percent = false,
+	onChange,
+}: {
+	label: string;
+	field: keyof TaxYearConfiguration;
+	value: number;
+	step: string;
+	percent?: boolean;
+	onChange: UpdateConfiguration;
+}) {
+	return (
+		<div className="grid gap-2">
+			<Label htmlFor={`tax-${field}`}>{label}</Label>
+			<Input
+				id={`tax-${field}`}
+				type="number"
+				min="0"
+				max={percent ? '100' : undefined}
+				step={step}
+				value={value}
+				onChange={(event) =>
+					onChange(field, event.target.value, percent)
+				}
+			/>
+		</div>
+	);
+}

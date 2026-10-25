@@ -4,12 +4,15 @@ import { MemoryRouter } from 'react-router-dom';
 import { expect, test } from 'vitest';
 
 import { App } from '@/App';
+import { ThemeProvider } from '@/components/theme-provider';
 
 function renderApp(initialPath: string) {
 	return render(
-		<MemoryRouter initialEntries={[initialPath]}>
-			<App />
-		</MemoryRouter>,
+		<ThemeProvider defaultTheme="light">
+			<MemoryRouter initialEntries={[initialPath]}>
+				<App />
+			</MemoryRouter>
+		</ThemeProvider>,
 	);
 }
 
