@@ -1,0 +1,14 @@
+title: Accounting
+description: A practical guide to the self-hosted work-record, invoicing, payment, and tax-estimate application.
+url: "https://roja300.github.io"
+baseurl: "/Accounting"
+repository: roja300/Accounting
+github_url: "https://github.com/roja300/Accounting"
+permalink: pretty
+markdown: kramdown
+strict_front_matter: true
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - test
