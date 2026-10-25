@@ -1,8 +1,15 @@
-import { CalculatorIcon, PencilIcon } from 'lucide-react';
+import { PencilIcon } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 import {
 	Dialog,
 	DialogContent,
@@ -54,59 +61,82 @@ export function TaxPage() {
 	return (
 		<section
 			aria-label="Tax page"
-			className="min-h-[calc(100svh-4rem)] bg-muted/30 px-4 py-8 sm:px-6 lg:px-8"
+			className="h-full overflow-hidden bg-muted/30 px-4 py-6 sm:px-6 lg:px-8"
 		>
-			<div className="mx-auto max-w-screen-2xl space-y-6">
-				<header className="space-y-2">
-					<div className="flex items-center gap-3">
-						<div className="rounded-lg border bg-background p-2.5 shadow-sm">
-							<CalculatorIcon
-								className="size-5"
-								aria-hidden="true"
-							/>
-						</div>
-						<div>
-							<h1
-								id="tax-page-title"
-								className="text-3xl font-bold tracking-tight"
-							>
-								Tax years
-							</h1>
-							<p className="text-sm text-muted-foreground">
-								Ongoing UK tax estimates from completed work and
-								paid invoices.
-							</p>
-						</div>
-					</div>
-				</header>
-
-				<div className="rounded-lg border bg-background px-4 py-3 text-sm text-muted-foreground">
-					Estimates use GBP invoices and England, Wales and Northern
-					Ireland defaults. Configure each draft with your employment,
-					pension and allowance details. VAT is not included, and
-					these figures are not a submitted tax return.
+			<div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col">
+				<div className="mb-6 shrink-0">
+					<p className="mb-2 text-sm font-medium text-muted-foreground">
+						Tax
+					</p>
+					<h1 className="text-3xl font-semibold tracking-tight">
+						Tax years
+					</h1>
+					<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+						Review ongoing UK tax estimates from completed work and
+						paid invoices.
+					</p>
 				</div>
 
-				{loading && <p role="status">Loading tax years…</p>}
+				<Card className="mb-6 shrink-0 shadow-sm">
+					<CardHeader>
+						<CardTitle>About these estimates</CardTitle>
+						<CardDescription>
+							Figures use GBP invoices and England, Wales and
+							Northern Ireland defaults. Configure each draft with
+							your employment, pension and allowance details. VAT
+							is not included, and the result is not a submitted
+							tax return.
+						</CardDescription>
+					</CardHeader>
+				</Card>
+
+				<div
+					aria-live="polite"
+					className="mb-4 flex min-h-6 shrink-0 items-center justify-between text-sm text-muted-foreground"
+				>
+					<p>
+						{!(loading || error)
+							? `${taxYears.length} tax ${taxYears.length === 1 ? 'year' : 'years'}`
+							: ''}
+					</p>
+					{loading && <p role="status">Loading tax years…</p>}
+				</div>
 				{error && (
 					<p
 						role="alert"
-						className="text-sm text-destructive"
+						className="mb-4 shrink-0 text-sm text-destructive"
 					>
 						{error}
 					</p>
 				)}
-				{!(loading || error) && (
-					<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-						{taxYears.map((taxYear) => (
-							<TaxYearCard
-								key={taxYear.startYear}
-								taxYear={taxYear}
-								onConfigure={setSelected}
-							/>
-						))}
-					</div>
-				)}
+				<div
+					data-testid="tax-year-card-scroll"
+					className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-1"
+					aria-busy={loading}
+				>
+					{!(loading || error) && taxYears.length > 0 && (
+						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{taxYears.map((taxYear) => (
+								<TaxYearCard
+									key={taxYear.startYear}
+									taxYear={taxYear}
+									onConfigure={setSelected}
+								/>
+							))}
+						</div>
+					)}
+					{!(loading || error) && taxYears.length === 0 && (
+						<Card className="min-h-64 w-full justify-center py-12 text-center shadow-sm">
+							<CardHeader className="mx-auto w-full max-w-xl">
+								<CardTitle>No tax years yet</CardTitle>
+								<CardDescription>
+									Tax years will appear as work is recorded
+									and invoices are paid.
+								</CardDescription>
+							</CardHeader>
+						</Card>
+					)}
+				</div>
 			</div>
 
 			{selected && (
@@ -137,33 +167,48 @@ function TaxYearCard({
 	onConfigure: (taxYear: TaxYear) => void;
 }) {
 	return (
-		<Card className="gap-0 overflow-hidden py-0">
-			<CardHeader className="border-b bg-muted/30 px-5 py-5">
-				<div className="flex items-start justify-between gap-4">
-					<div className="space-y-1">
-						<h2 className="font-heading text-base font-medium leading-snug">
+		<Card
+			className="h-full shadow-sm transition-shadow hover:shadow-md"
+			role="article"
+			aria-labelledby={`tax-year-${taxYear.startYear}`}
+		>
+			<CardHeader className="border-b">
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<h2
+							id={`tax-year-${taxYear.startYear}`}
+							className="font-heading text-base leading-snug font-medium"
+						>
 							{taxYear.startYear}/
 							{String(taxYear.startYear + 1).slice(-2)} tax year
 						</h2>
-						<p className="text-sm text-muted-foreground">
+						<CardDescription className="mt-1">
 							6 April {taxYear.startYear} – 5 April{' '}
 							{taxYear.startYear + 1}
-						</p>
+						</CardDescription>
 					</div>
 					<span
 						className={cn(
-							'rounded-full border px-2.5 py-1 text-xs font-medium capitalize',
+							'shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize',
 							taxYear.status === 'configured'
-								? 'bg-primary text-primary-foreground'
-								: 'bg-background text-muted-foreground',
+								? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+								: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
 						)}
 					>
 						{taxYear.status}
 					</span>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-5 p-5">
-				<div className="grid grid-cols-2 gap-4">
+			<CardContent className="flex flex-1 flex-col gap-5">
+				<div>
+					<p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+						Estimated amount to pay
+					</p>
+					<p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
+						{money.format(taxYear.amountToPay)}
+					</p>
+				</div>
+				<div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/50 p-3">
 					<Figure
 						label="Expected pay"
 						value={taxYear.expectedPay}
@@ -173,15 +218,7 @@ function TaxYearCard({
 						value={taxYear.totalEarned}
 					/>
 				</div>
-				<div className="rounded-lg bg-primary p-4 text-primary-foreground">
-					<p className="text-xs font-medium uppercase tracking-wide opacity-75">
-						Estimated amount to pay
-					</p>
-					<p className="mt-1 text-2xl font-bold">
-						{money.format(taxYear.amountToPay)}
-					</p>
-				</div>
-				<dl className="space-y-2 text-sm">
+				<dl className="space-y-2 border-t pt-4 text-sm">
 					<Breakdown
 						label="Income Tax"
 						value={taxYear.estimatedIncomeTax}
@@ -191,9 +228,12 @@ function TaxYearCard({
 						value={taxYear.estimatedNationalInsurance}
 					/>
 				</dl>
+			</CardContent>
+			<CardFooter className="border-t">
 				<Button
 					className="w-full"
 					variant="outline"
+					size="sm"
 					onClick={() => onConfigure(taxYear)}
 				>
 					<PencilIcon
@@ -202,7 +242,7 @@ function TaxYearCard({
 					/>
 					Configure tax year
 				</Button>
-			</CardContent>
+			</CardFooter>
 		</Card>
 	);
 }
@@ -213,7 +253,7 @@ function Figure({ label, value }: { label: string; value: number }) {
 			<p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
 				{label}
 			</p>
-			<p className="mt-1 text-xl font-semibold tabular-nums">
+			<p className="mt-1 font-semibold tabular-nums">
 				{money.format(value)}
 			</p>
 		</div>
@@ -281,10 +321,7 @@ function TaxConfigurationDialog({
 			onOpenChange={(open) => !open && onClose()}
 		>
 			<DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
-				<form
-					onSubmit={submit}
-					className="space-y-6"
-				>
+				<form onSubmit={submit}>
 					<DialogHeader>
 						<DialogTitle>
 							Configure {taxYear.startYear}/
@@ -296,128 +333,132 @@ function TaxConfigurationDialog({
 						</DialogDescription>
 					</DialogHeader>
 
-					<fieldset className="grid gap-4 sm:grid-cols-2">
-						<legend className="mb-3 text-sm font-semibold">
-							Your tax-year details
-						</legend>
-						<MoneyField
-							label="Employment income"
-							field="employmentIncome"
-							value={configuration.employmentIncome}
-							onChange={update}
-						/>
-						<MoneyField
-							label="Tax already paid through employment"
-							field="employmentTaxPaid"
-							value={configuration.employmentTaxPaid}
-							onChange={update}
-						/>
-						<MoneyField
-							label="Pension contributions"
-							field="pensionContributions"
-							value={configuration.pensionContributions}
-							onChange={update}
-						/>
-						<MoneyField
-							label="Allowable business expenses"
-							field="allowableExpenses"
-							value={configuration.allowableExpenses}
-							onChange={update}
-						/>
-						<MoneyField
-							label="Other tax-free allowances"
-							field="additionalAllowances"
-							value={configuration.additionalAllowances}
-							onChange={update}
-						/>
-					</fieldset>
+					<div className="grid gap-5 py-6">
+						<fieldset className="grid gap-5 sm:grid-cols-2">
+							<legend className="mb-4 text-sm font-semibold">
+								Your tax-year details
+							</legend>
+							<MoneyField
+								label="Employment income"
+								field="employmentIncome"
+								value={configuration.employmentIncome}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Tax already paid through employment"
+								field="employmentTaxPaid"
+								value={configuration.employmentTaxPaid}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Pension contributions"
+								field="pensionContributions"
+								value={configuration.pensionContributions}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Allowable business expenses"
+								field="allowableExpenses"
+								value={configuration.allowableExpenses}
+								onChange={update}
+							/>
+							<MoneyField
+								label="Other tax-free allowances"
+								field="additionalAllowances"
+								value={configuration.additionalAllowances}
+								onChange={update}
+							/>
+						</fieldset>
 
-					<details className="rounded-lg border p-4">
-						<summary className="cursor-pointer text-sm font-semibold">
-							UK rates and thresholds
-						</summary>
-						<div className="mt-4 grid gap-4 sm:grid-cols-2">
-							<MoneyField
-								label="Personal allowance"
-								field="personalAllowance"
-								value={configuration.personalAllowance}
-								onChange={update}
-							/>
-							<MoneyField
-								label="Allowance taper threshold"
-								field="personalAllowanceTaperThreshold"
-								value={
-									configuration.personalAllowanceTaperThreshold
-								}
-								onChange={update}
-							/>
-							<MoneyField
-								label="Basic-rate band"
-								field="basicRateLimit"
-								value={configuration.basicRateLimit}
-								onChange={update}
-							/>
-							<MoneyField
-								label="Additional-rate threshold"
-								field="higherRateLimit"
-								value={configuration.higherRateLimit}
-								onChange={update}
-							/>
-							<RateField
-								label="Basic rate"
-								field="basicRate"
-								value={configuration.basicRate}
-								onChange={update}
-							/>
-							<RateField
-								label="Higher rate"
-								field="higherRate"
-								value={configuration.higherRate}
-								onChange={update}
-							/>
-							<RateField
-								label="Additional rate"
-								field="additionalRate"
-								value={configuration.additionalRate}
-								onChange={update}
-							/>
-							<MoneyField
-								label="NI lower profits limit"
-								field="nationalInsuranceLowerLimit"
-								value={
-									configuration.nationalInsuranceLowerLimit
-								}
-								onChange={update}
-							/>
-							<MoneyField
-								label="NI upper profits limit"
-								field="nationalInsuranceUpperLimit"
-								value={
-									configuration.nationalInsuranceUpperLimit
-								}
-								onChange={update}
-							/>
-							<RateField
-								label="NI main rate"
-								field="nationalInsuranceMainRate"
-								value={configuration.nationalInsuranceMainRate}
-								onChange={update}
-							/>
-							<RateField
-								label="NI additional rate"
-								field="nationalInsuranceAdditionalRate"
-								value={
-									configuration.nationalInsuranceAdditionalRate
-								}
-								onChange={update}
-							/>
-						</div>
-					</details>
+						<details className="rounded-xl border bg-muted/30 p-4">
+							<summary className="cursor-pointer text-sm font-semibold">
+								UK rates and thresholds
+							</summary>
+							<div className="mt-5 grid gap-5 sm:grid-cols-2">
+								<MoneyField
+									label="Personal allowance"
+									field="personalAllowance"
+									value={configuration.personalAllowance}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Allowance taper threshold"
+									field="personalAllowanceTaperThreshold"
+									value={
+										configuration.personalAllowanceTaperThreshold
+									}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Basic-rate band"
+									field="basicRateLimit"
+									value={configuration.basicRateLimit}
+									onChange={update}
+								/>
+								<MoneyField
+									label="Additional-rate threshold"
+									field="higherRateLimit"
+									value={configuration.higherRateLimit}
+									onChange={update}
+								/>
+								<RateField
+									label="Basic rate"
+									field="basicRate"
+									value={configuration.basicRate}
+									onChange={update}
+								/>
+								<RateField
+									label="Higher rate"
+									field="higherRate"
+									value={configuration.higherRate}
+									onChange={update}
+								/>
+								<RateField
+									label="Additional rate"
+									field="additionalRate"
+									value={configuration.additionalRate}
+									onChange={update}
+								/>
+								<MoneyField
+									label="NI lower profits limit"
+									field="nationalInsuranceLowerLimit"
+									value={
+										configuration.nationalInsuranceLowerLimit
+									}
+									onChange={update}
+								/>
+								<MoneyField
+									label="NI upper profits limit"
+									field="nationalInsuranceUpperLimit"
+									value={
+										configuration.nationalInsuranceUpperLimit
+									}
+									onChange={update}
+								/>
+								<RateField
+									label="NI main rate"
+									field="nationalInsuranceMainRate"
+									value={
+										configuration.nationalInsuranceMainRate
+									}
+									onChange={update}
+								/>
+								<RateField
+									label="NI additional rate"
+									field="nationalInsuranceAdditionalRate"
+									value={
+										configuration.nationalInsuranceAdditionalRate
+									}
+									onChange={update}
+								/>
+							</div>
+						</details>
+					</div>
 
 					{error && (
 						<p
 							role="alert"
-							className="text-sm text-destructive"
+							className="mb-4 text-sm text-destructive"
 						>
 							{error}
 						</p>
