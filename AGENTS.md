@@ -29,6 +29,8 @@ These instructions apply to the entire repository. A more specific `AGENTS.md` i
 - If already on the dedicated branch for that change request, continue using it. If the branch already exists, reuse it instead of creating a duplicate when doing so is safe.
 - Preserve unrelated working-tree changes when creating or switching branches. Never stash, reset, discard, or overwrite them without explicit user approval; ask for direction if they prevent a safe branch change.
 - After creating or switching to the dedicated branch, commit completed and validated increments throughout the change request. Keep each commit focused and exclude unrelated working-tree changes.
+- Keep the originating change-request document updated as the work and its pull request evolve. After every material implementation increment, review-driven adjustment, or user-requested follow-up, append a new chronological entry under `### Codex Response` using the timestamped heading and `##### Comments` structure shown in `docs/change-requests/_template.md` and existing change requests.
+- Preserve earlier Codex Response entries as an audit trail instead of rewriting or replacing them. Each new entry should summarize what changed in that increment, record the validation performed, and use its Comments list for relevant decisions, limitations, follow-up considerations, or `N/A` when there are none.
 
 ## Frontend
 
