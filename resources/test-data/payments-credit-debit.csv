@@ -1,0 +1,11 @@
+Transaction Date,Transaction Type,Transaction Description,Debit Amount,Credit Amount,Balance
+01/05/2026,FPI,May salary,,3200.00,12134.44
+03/05/2026,DD,Studio rent,950.00,,11184.44
+05/05/2026,FPI,Northwind Demo Ltd invoice INV-2026-007,,1275.00,12459.44
+07/05/2026,DEB,Cloud hosting,42.50,,12416.94
+10/05/2026,DEB,Client lunch,58.30,,12358.64
+14/05/2026,FPI,Contoso Sample Ltd invoice INV-2026-008,,980.00,13338.64
+18/05/2026,DD,Professional membership,19.00,,13319.64
+22/05/2026,DEB,Printer supplies,73.25,,13246.39
+26/05/2026,FPI,Fabrikam Test Ltd invoice INV-2026-009,,1650.00,14896.39
+29/05/2026,DEB,Conference ticket,225.00,,14671.39

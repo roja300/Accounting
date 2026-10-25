@@ -1,0 +1,6 @@
+Date,Description,From,Reference,Amount,Balance,Currency
+not-a-date,Invalid transaction,Example Ltd,BAD-DATE,100.00,1000.00,GBP
+02/06/2026,Zero-value transaction,Example Ltd,ZERO,0.00,1000.00,GBP
+03/06/2026,,Example Ltd,NO-DESCRIPTION,50.00,1050.00,GBP
+04/06/2026,Invalid amount,Example Ltd,BAD-AMOUNT,not-money,1050.00,GBP
+05/06/2026,Invalid currency,Example Ltd,BAD-CURRENCY,50.00,1100.00,GB
