@@ -1,0 +1,13 @@
+Date,Time,Description,From,Reference,Amount,Balance,Currency
+01/04/2026,09:00,April salary,Example Consulting Ltd,SAL-2026-04,3200.00,5200.00,GBP
+02/04/2026,08:15,Studio rent,Example Property Services,RENT-APR-26,-950.00,4250.00,GBP
+04/04/2026,13:42,Client invoice payment,Northwind Demo Ltd,INV-2026-004,1450.00,5700.00,GBP
+06/04/2026,11:20,Accounting software,Example Software Ltd,SUB-8042,-24.00,5676.00,GBP
+08/04/2026,17:05,"Train to client, London",Example Rail,TRAVEL-0408,-86.40,5589.60,GBP
+11/04/2026,10:30,Project completion bonus,Northwind Demo Ltd,BONUS-Q1,500.00,6089.60,GBP
+14/04/2026,12:10,Professional insurance,Example Insurance Plc,POLICY-1047,-38.75,6050.85,GBP
+17/04/2026,15:55,Client invoice payment,Contoso Sample Ltd,INV-2026-005,875.50,6926.35,GBP
+20/04/2026,08:44,Mobile phone,Example Telecom Ltd,MOBILE-APR,-31.20,6895.15,GBP
+23/04/2026,16:18,Office supplies,Example Stationery Ltd,ORDER-4412,-64.99,6830.16,GBP
+27/04/2026,09:36,Client invoice payment,Fabrikam Test Ltd,INV-2026-006,2100.00,8930.16,GBP
+30/04/2026,18:02,Bank interest,Example Bank,INTEREST-APR,4.28,8934.44,GBP
