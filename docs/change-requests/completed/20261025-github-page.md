@@ -70,3 +70,12 @@ Added the required one-time repository setup for the GitHub Pages deployment wor
 
 1. The reported `Get Pages site` 404 occurs when GitHub Pages has not yet been enabled for the repository; the existing workflow permissions are already correct for builds and deployments after enablement.
 2. Automatic enablement was not added because `actions/configure-pages` requires a separate token with elevated repository administration and Pages permissions for that option.
+
+#### [2026-10-25 17:43] Isolated Site Source Validation From Bundler Dependencies
+
+Restricted the link and asset validation scans to the landing site's root pages, layouts, and includes. The earlier recursive scan also inspected HTML installed beneath the repository by the GitHub Actions Bundler cache, causing a dependency's `/assets/style.css` reference to be mistaken for a landing-site asset.
+
+##### Comments
+
+1. Added a non-site HTML fixture containing the reported asset reference to ensure dependency and generated HTML remains outside the source scan.
+2. The reported seed now passes with 5 tests and 27 assertions, a second randomized run also passes, and the strict Jekyll production build completes successfully.
