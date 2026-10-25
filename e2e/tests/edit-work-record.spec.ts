@@ -77,9 +77,9 @@ test('should prepopulate and update a work record from its card action', async (
 	await expect(
 		page.getByRole('combobox', { name: 'Currency' }),
 	).toContainText('Pound sterling (GBP)');
-	await expect(page.getByRole('combobox', { name: 'Client' })).toHaveValue(
-		record.client,
-	);
+	await expect(
+		page.getByRole('combobox', { name: 'Customer' }),
+	).toContainText(record.client);
 	await expect(page.getByRole('combobox', { name: 'Project' })).toHaveValue(
 		record.project,
 	);

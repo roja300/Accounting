@@ -142,6 +142,7 @@ test('should update payment status and confirm before deleting an invoice', asyn
 }) => {
 	let updatedStatus = '';
 	let deleteCalls = 0;
+	let deleted = false;
 	await page.route('**/api/exported-invoices**', async (route) => {
 		const request = route.request();
 		if (request.method() === 'PATCH') {
@@ -154,16 +155,17 @@ test('should update payment status and confirm before deleting an invoice', asyn
 		}
 		if (request.method() === 'DELETE') {
 			deleteCalls += 1;
+			deleted = true;
 			await route.fulfill({ status: 204 });
 			return;
 		}
 		await route.fulfill({
 			json: {
-				items: [invoice],
+				items: deleted ? [] : [invoice],
 				page: 1,
 				pageSize: 9,
-				totalItems: 1,
-				totalPages: 1,
+				totalItems: deleted ? 0 : 1,
+				totalPages: deleted ? 0 : 1,
 			},
 		});
 	});
@@ -181,7 +183,12 @@ test('should update payment status and confirm before deleting an invoice', asyn
 		.getByRole('button', { name: 'Delete INV-20261019-ABC123' })
 		.click();
 	const dialog = page.getByRole('dialog', { name: 'Delete this invoice?' });
-	await expect(dialog).toContainText('marked as deleted');
+	await expect(dialog).toContainText('hidden from exported invoices');
+	await expect(dialog).toContainText(
+		'work records will be detached and made available to invoice again',
+	);
 	await dialog.getByRole('button', { name: 'Delete invoice' }).click();
 	await expect.poll(() => deleteCalls).toBe(1);
+	await expect(page.getByText('INV-20261019-ABC123')).toHaveCount(0);
+	await expect(page.getByText('No exported invoices yet')).toBeVisible();
 });
