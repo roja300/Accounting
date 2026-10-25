@@ -14,6 +14,26 @@ public interface ITaxIncomeSource
         CancellationToken cancellationToken);
 }
 
+public interface IExpectedPaySource
+{
+    Task<IReadOnlySet<int>> GetActiveTaxYearsAsync(CancellationToken cancellationToken);
+
+    Task<decimal> GetExpectedPayAsync(
+        DateTimeOffset startsAt,
+        DateTimeOffset endsBefore,
+        CancellationToken cancellationToken);
+}
+
+public interface IReceivedPaymentSource
+{
+    Task<IReadOnlySet<int>> GetActiveTaxYearsAsync(CancellationToken cancellationToken);
+
+    Task<decimal> GetReceivedTotalAsync(
+        DateTimeOffset startsAt,
+        DateTimeOffset endsBefore,
+        CancellationToken cancellationToken);
+}
+
 public interface ITaxYearRepository
 {
     Task<IReadOnlyList<TaxYearConfiguration>> GetConfigurationsAsync(CancellationToken cancellationToken);

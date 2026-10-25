@@ -73,7 +73,7 @@ export function TaxPage() {
 					</h1>
 					<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
 						Review ongoing UK tax estimates from completed work and
-						paid invoices.
+						received payments.
 					</p>
 				</div>
 
@@ -81,11 +81,11 @@ export function TaxPage() {
 					<CardHeader>
 						<CardTitle>About these estimates</CardTitle>
 						<CardDescription>
-							Figures use GBP invoices and England, Wales and
-							Northern Ireland defaults. Configure each draft with
-							your employment, pension and allowance details. VAT
-							is not included, and the result is not a submitted
-							tax return.
+							Figures use GBP work records and received payments,
+							with England, Wales and Northern Ireland defaults.
+							Configure each draft with your employment, pension
+							and allowance details. VAT is not included, and the
+							result is not a submitted tax return.
 						</CardDescription>
 					</CardHeader>
 				</Card>
