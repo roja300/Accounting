@@ -37,6 +37,19 @@ public sealed class CsvPaymentParserTests
     }
 
     [Fact]
+    public async Task ShouldParseCommonUkBankHeaders_WhenAmountsUseDebitAndCreditColumns()
+    {
+        const string csv = "Transaction Date,Transaction Type,Transaction Description,Debit Amount,Credit Amount,Balance\n24/10/2026,FPI,Example Consulting Ltd,,2500.00,8420.10";
+
+        var result = await ParseAsync(csv);
+
+        Assert.True(result.IsValid);
+        var payment = Assert.Single(result.Payments);
+        Assert.Equal("Example Consulting Ltd", payment.Description);
+        Assert.Equal(2500m, payment.Amount);
+    }
+
+    [Fact]
     public async Task ShouldReturnEveryRowError_WhenRowsAreInvalid()
     {
         const string csv = "Date,Description,Amount\nnot-a-date,Salary,0\n24/10/2026,,hello";
