@@ -41,6 +41,20 @@ public sealed class PaymentEndpointTests
     }
 
     [Fact]
+    public async Task ShouldRejectCsv_WhenFileNameExceedsPersistenceLimit()
+    {
+        var service = new StubPaymentService();
+        using var client = CreateClient(service);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent("Date,Description,Amount\n24/10/2026,Salary,2000"), "file", $"{new string('a', 252)}.csv");
+
+        var response = await client.PostAsync("/payments/imports", content, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Null(service.ImportedFileName);
+    }
+
+    [Fact]
     public async Task ShouldPassFiltersToService_WhenListingPayments()
     {
         var service = new StubPaymentService();
