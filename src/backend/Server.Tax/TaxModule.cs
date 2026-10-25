@@ -22,7 +22,9 @@ public sealed class TaxModule : IModule
             npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history");
         }));
         services.AddScoped<ITaxYearRepository>(provider => provider.GetRequiredService<TaxContext>());
-        services.AddScoped<ITaxIncomeSource, InvoiceTaxIncomeSource>();
+        services.AddScoped<IExpectedPaySource, WorkRecordExpectedPaySource>();
+        services.AddScoped<IReceivedPaymentSource, ReceivedPaymentIncomeSource>();
+        services.AddScoped<ITaxIncomeSource, TaxIncomeSource>();
         services.AddScoped<ITaxYearService, TaxYearService>();
     }
 

@@ -9,7 +9,7 @@ This work item should include information for calculating tax.
 
 1. The system should provide a means for calculating tax per year.
 2. The system should provide a page for displaying tax per year, as cards.
-3. The tax calculation should be ongoing as work records are completed, and invoices are paid.
+3. The tax calculation should be ongoing as work records are completed, and payments are received.
 4. The system should display both expected pay, and the amount that needs to be paid, and total earned for the year, on each card.
 5. The system should calculate tax per financial year, as cards.
 6. The system should use a UK based tax calculation, which would each require information to be further turned into a tax return.
@@ -29,7 +29,7 @@ This work item should include information for calculating tax.
 
 #### [2026-10-25 13:32] Added Ongoing UK Tax-Year Estimates
 
-Added a dedicated tax module, PostgreSQL persistence, and API endpoints for listing and configuring tax years. Tax years run from 6 April to 5 April and are created automatically from GBP work-record and paid-invoice activity, with the current year always available as a draft. Expected pay is derived from active work records, while total earned is derived from invoices marked as payment received.
+Added a dedicated tax module, PostgreSQL persistence, and API endpoints for listing and configuring tax years. Tax years run from 6 April to 5 April and are created automatically from GBP work-record and received-payment activity, with the current year always available as a draft. Expected pay is derived from active work records, while total earned is derived from incoming imported payments.
 
 Implemented an editable UK estimate using the 2026/27 England, Wales and Northern Ireland defaults for Income Tax and Class 4 National Insurance. Each tax year can be configured with employment income, employment tax already paid, pension contributions, allowable business expenses, other allowances, and editable rates and thresholds. Configured values are stored with explicit PostgreSQL monetary precision. VAT is excluded and the interface explains that the result is an estimate rather than a submitted return.
 
@@ -50,4 +50,14 @@ Added a browser regression test for contained tax-card scrolling. Frontend type-
 ##### Comments
 
 1. The existing repository-wide Biome baseline remains unchanged.
+
+#### [2026-10-25 13:48] Derived Tax Income From Received Payments
+
+Changed tax-year income defaults so total earned and the resulting default tax estimate are derived from positive imported GBP payments by transaction date. Expected pay continues to be derived from active GBP work records, and tax-year discovery now combines years containing either work records or received payments.
+
+Separated expected-pay and received-payment readers behind focused interfaces and added a regression test proving that total earned uses received payments independently from expected work value. The backend build and all 88 backend tests pass; frontend type-checking, all 14 unit tests, the production build, and all 3 focused Tax browser tests pass. The focused Biome check also passes for the changed Tax page.
+
+##### Comments
+
+1. Negative or zero-value entries and non-GBP payments do not contribute to received tax income.
 

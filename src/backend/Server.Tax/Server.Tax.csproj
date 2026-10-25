@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Server.Invoices\Server.Invoices.csproj" />
+    <ProjectReference Include="..\Server.Payments\Server.Payments.csproj" />
     <ProjectReference Include="..\Server.Shared\Server.Shared.csproj" />
   </ItemGroup>
 
