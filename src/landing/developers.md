@@ -5,8 +5,6 @@ page_key: developers
 description: Architecture, local development, validation, debugging, and database guidance for Accounting contributors.
 ---
 
-<section class="page-hero"><div class="shell narrow"><p class="eyebrow">Developer guide</p><h1>Build and test Accounting locally.</h1><p class="lede">The application combines a React frontend, a modular ASP.NET Core API, and PostgreSQL. This page collects the practical information needed to work on it.</p></div></section>
-
 <div class="shell docs-layout">
   <aside class="contents" aria-label="On this page"><p>On this page</p><a href="#technology">Technology</a><a href="#repository-layout">Repository layout</a><a href="#frontend-development">Frontend</a><a href="#backend-development">Backend</a><a href="#local-https">Local HTTPS</a><a href="#validation">Validation</a><a href="#debugging">Debugging</a><a href="#database-development">Database</a></aside>
   <article class="prose">

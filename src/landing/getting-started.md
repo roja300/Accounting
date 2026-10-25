@@ -5,8 +5,6 @@ page_key: getting-started
 description: Install and run Accounting locally with Docker Compose, PostgreSQL, ASP.NET Core, and React.
 ---
 
-<section class="page-hero"><div class="shell narrow"><p class="eyebrow">Getting started</p><h1>Local setup, without the guesswork.</h1><p class="lede">The recommended route uses Docker Compose to run PostgreSQL, the API, and the frontend together. You can be looking at the application in a few deliberate steps.</p></div></section>
-
 <div class="shell docs-layout">
   <aside class="contents" aria-label="On this page"><p>On this page</p><a href="#prerequisites">Prerequisites</a><a href="#clone-the-repository">Clone the repository</a><a href="#start-the-stack">Start the stack</a><a href="#open-the-application">Open the application</a><a href="#https-optional">HTTPS (optional)</a><a href="#stop-the-stack">Stop the stack</a></aside>
   <article class="prose">
