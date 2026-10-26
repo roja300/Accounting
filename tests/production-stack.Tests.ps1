@@ -26,7 +26,7 @@ function Test-FirstRunSetup {
 
     try {
         $global:AccountingFirstRunResponses = New-Object Collections.Generic.Queue[string]
-        @("accounting_test", "accounting_user", "FirstRunPassword-2026", "FirstRunPassword-2026", "3102") | ForEach-Object {
+        @("accounting_user", "FirstRunPassword-2026", "FirstRunPassword-2026") | ForEach-Object {
             $global:AccountingFirstRunResponses.Enqueue($_)
         }
         function global:Read-Host {
@@ -50,10 +50,10 @@ function Test-FirstRunSetup {
             $parts = $_ -split '=', 2
             $settings[$parts[0]] = $parts[1]
         }
-        Assert-Condition ($settings["POSTGRES_DB"] -eq "accounting_test") "First-run setup must save the database name."
+        Assert-Condition ($settings["POSTGRES_DB"] -eq "accounting") "First-run setup must use the default database name."
         Assert-Condition ($settings["POSTGRES_USER"] -eq "accounting_user") "First-run setup must save the database user."
         Assert-Condition ($settings["POSTGRES_PASSWORD"] -eq "FirstRunPassword-2026") "First-run setup must save the confirmed password."
-        Assert-Condition ($settings["FRONTEND_PORT"] -eq "3102") "First-run setup must save the frontend port."
+        Assert-Condition ($settings["FRONTEND_PORT"] -eq "3000") "First-run setup must use the default frontend port."
 
         $bytes = [IO.File]::ReadAllBytes($temporaryEnvironment)
         $hasUtf8Bom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
