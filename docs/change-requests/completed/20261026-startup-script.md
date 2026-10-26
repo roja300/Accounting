@@ -87,3 +87,11 @@ Changed the first-run prompts to `Database username`, `Database password`, and `
 ##### Comments
 
 1. The first-run regression verifies the exact three prompts and passes with both Compose topology definitions. The landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:22] Required an explicit database username
+
+Removed the displayed `accounting` default from the database username prompt. First-run setup now shows only `Database username` and rejects an empty response instead of silently selecting a username.
+
+##### Comments
+
+1. Updated the prompt regression to require the exact label without a bracketed default; the first-run and Compose topology checks pass.

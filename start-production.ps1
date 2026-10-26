@@ -16,8 +16,13 @@ function Read-Setting {
     )
 
     while ($true) {
-        $value = Read-Host "$Prompt [$DefaultValue]"
-        if ([string]::IsNullOrWhiteSpace($value)) {
+        $displayPrompt = $Prompt
+        if (-not [string]::IsNullOrWhiteSpace($DefaultValue)) {
+            $displayPrompt = "$Prompt [$DefaultValue]"
+        }
+
+        $value = Read-Host $displayPrompt
+        if ([string]::IsNullOrWhiteSpace($value) -and -not [string]::IsNullOrWhiteSpace($DefaultValue)) {
             $value = $DefaultValue
         }
 
@@ -67,7 +72,7 @@ function New-ProductionEnvironmentFile {
     param([string]$Path)
 
     Write-Host "No production environment file was found. Let's create one."
-    $user = Read-Setting "Database username" "accounting" '^[A-Za-z0-9_]+$' "Use only letters, numbers, and underscores."
+    $user = Read-Setting "Database username" "" '^[A-Za-z0-9_]+$' "Use only letters, numbers, and underscores."
     $password = Read-DatabasePassword
 
     $content = @(
