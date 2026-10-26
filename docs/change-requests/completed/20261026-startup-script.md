@@ -32,3 +32,13 @@ Added a root-level PowerShell launcher and an isolated production Compose defini
 
 1. The example production environment file contains no real credentials and must be copied to the ignored `src/.env.production` file before startup.
 2. The launcher and both production and development Compose configurations pass the automated topology check.
+
+#### [2026-10-26 18:49] Documented and validated production startup
+
+Updated the repository README and published getting-started and developer guides with production setup, startup, health-check, shutdown, port-selection, data-retention, and TLS-boundary guidance while retaining the existing development and local HTTPS commands. Added documentation regression coverage and made the existing landing front-matter assertions accept valid LF and CRLF checkouts.
+
+##### Comments
+
+1. End-to-end validation built the production images, brought PostgreSQL, the API, and nginx to healthy state, returned HTTP 200 for the application, and returned `Healthy` from the API readiness endpoint through nginx. The test containers, network, and empty test volume were removed afterward; existing development containers were left running.
+2. Backend build and all 88 backend tests pass. Frontend type-checking, all 14 unit tests, and the production build pass. The container topology test passes, and the landing site passes 8 tests with 52 assertions plus a strict production build.
+3. The repository-wide Biome check remains blocked by pre-existing formatting and import-style diagnostics in untouched frontend files; no unrelated frontend files were rewritten.
