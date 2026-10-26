@@ -45,7 +45,7 @@ function Test-FirstRunSetup {
         }
 
         & (Join-Path $repositoryRoot "start-production.ps1") -EnvironmentFile $temporaryEnvironment -ValidateOnly -NoBrowser
-        $expectedPrompts = @("Database username [accounting]", "Database password", "Confirm database password")
+        $expectedPrompts = @("Database username", "Database password", "Confirm database password")
         Assert-Condition (($global:AccountingFirstRunPrompts -join "|") -eq ($expectedPrompts -join "|")) "First-run setup must request only the database username and confirmed password."
         Assert-Condition (Test-Path -LiteralPath $temporaryEnvironment -PathType Leaf) "First-run setup must create the environment file."
 
