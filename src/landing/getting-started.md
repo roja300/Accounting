@@ -18,11 +18,9 @@ description: Run the production or development Accounting stack with Docker Comp
 Set-Location Accounting</code></pre></div>
 
     <h2 id="start-production">Start production</h2>
-    <p>From the repository root, copy the production environment template, replace its example password with a long, random value, and run the startup script. The environment file is ignored by Git.</p>
-    <div class="code-block"><div class="code-label">PowerShell</div><pre><code>Copy-Item src/.env.production.example src/.env.production
-notepad src/.env.production
-./start-production.ps1</code></pre></div>
-    <p>The launcher builds the production images, starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application in the background, waits for all services to become healthy, and opens the application in your default browser. The API applies pending Entity Framework migrations during startup. Change <code>FRONTEND_PORT</code> in <code>src/.env.production</code> if port 3000 is already in use, or pass <code>-NoBrowser</code> for a headless launch.</p>
+    <p>Run the startup script from the repository root. On the first run, it asks for the PostgreSQL database name, user, hidden password, and frontend port, then creates the Git-ignored <code>src/.env.production</code> file.</p>
+    <div class="code-block"><div class="code-label">PowerShell</div><pre><code>./start-production.ps1</code></pre></div>
+    <p>The launcher builds the production images, starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application in the background, waits for all services to become healthy, and opens the application in your default browser. The API applies pending Entity Framework migrations during startup. Edit <code>src/.env.production</code> to change the saved configuration, or pass <code>-NoBrowser</code> for a headless launch.</p>
 
     <h2 id="open-the-application">Open the application</h2>
     <div class="endpoint-list"><a href="http://localhost:3000"><span><strong>Frontend</strong><small>Use the application</small></span><code>localhost:3000</code></a><a href="http://localhost:3000/api/health/ready"><span><strong>Readiness</strong><small>Check API and database health through nginx</small></span><code>/api/health/ready</code></a></div>

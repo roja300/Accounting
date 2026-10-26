@@ -69,9 +69,10 @@ class LandingSiteTest < Minitest::Test
     getting_started = ROOT.join("getting-started.md").read
 
     assert_includes readme, "./start-production.ps1"
-    assert_includes readme, "src/.env.production.example"
+    assert_includes readme, "first run"
     assert_includes getting_started, "./start-production.ps1"
     assert_includes getting_started, "src/compose.production.yaml"
+    assert_includes getting_started, "hidden password"
     assert_includes getting_started, "-NoBrowser"
     assert_includes getting_started, "docker compose --env-file .env.development up --build"
   end
