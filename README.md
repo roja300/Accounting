@@ -11,7 +11,7 @@ Copy-Item src/.env.production.example src/.env.production
 ./start-production.ps1
 ```
 
-The launcher builds and starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application, waits for every service to become healthy, and exposes the application at `http://localhost:3000`. Set `FRONTEND_PORT` in `src/.env.production` to publish a different port. Only nginx is exposed to the host; terminate TLS with a trusted reverse proxy before exposing the application outside a trusted network.
+The launcher builds and starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application, waits for every service to become healthy, and opens the application in your default browser at `http://localhost:3000`. Set `FRONTEND_PORT` in `src/.env.production` to publish a different port, or pass `-NoBrowser` when running headlessly. Only nginx is exposed to the host; terminate TLS with a trusted reverse proxy before exposing the application outside a trusted network.
 
 Stop the production containers without deleting their PostgreSQL data:
 
