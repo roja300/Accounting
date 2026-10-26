@@ -50,7 +50,7 @@ function ConvertTo-PlainText {
 
 function Read-DatabasePassword {
     while ($true) {
-        Write-Host "Use at least 16 characters containing only letters, numbers, periods, underscores, tildes, or hyphens."
+        Write-Host "Use at least 8 characters containing only letters, numbers, periods, underscores, tildes, or hyphens."
         $password = ConvertTo-PlainText (Read-Host "Database password" -AsSecureString)
         $confirmation = ConvertTo-PlainText (Read-Host "Confirm database password" -AsSecureString)
 
@@ -59,8 +59,8 @@ function Read-DatabasePassword {
             continue
         }
 
-        if ($password -notmatch '^[A-Za-z0-9._~-]{16,}$') {
-            Write-Warning "The password must be at least 16 characters and use only the supported characters."
+        if ($password -notmatch '^[A-Za-z0-9._~-]{8,}$') {
+            Write-Warning "The password must be at least 8 characters and use only the supported characters."
             continue
         }
 

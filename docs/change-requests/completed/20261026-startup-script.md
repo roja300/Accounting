@@ -95,3 +95,11 @@ Removed the displayed `accounting` default from the database username prompt. Fi
 ##### Comments
 
 1. Updated the prompt regression to require the exact label without a bracketed default; the first-run and Compose topology checks pass.
+
+#### [2026-10-26 19:23] Allowed eight-character database passwords
+
+Reduced the first-run database-password minimum from 16 characters to 8 characters while retaining confirmation and the connection-string-safe character restriction.
+
+##### Comments
+
+1. Updated the first-run regression to use an exactly eight-character password so the new lower boundary is covered; the first-run and Compose topology checks pass.
