@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$EnvironmentFile = (Join-Path $PSScriptRoot "src/.env.production"),
-    [switch]$ValidateOnly
+    [switch]$ValidateOnly,
+    [switch]$NoBrowser
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,16 +24,35 @@ $composeArguments = @(
 )
 
 if ($ValidateOnly) {
-    $composeArguments += @("config", "--quiet")
+    $dockerArguments = $composeArguments + @("config", "--quiet")
 } else {
-    $composeArguments += @("up", "--build", "--detach", "--wait")
+    $dockerArguments = $composeArguments + @("up", "--build", "--detach", "--wait")
 }
 
-& docker $composeArguments
+& docker $dockerArguments
 if ($LASTEXITCODE -ne 0) {
     throw "Docker Compose exited with code $LASTEXITCODE."
 }
 
 if (-not $ValidateOnly) {
-    Write-Host "Accounting production containers are running."
+    $publishedEndpoints = @(& docker @composeArguments port frontend 80)
+    if ($LASTEXITCODE -ne 0 -or $publishedEndpoints.Count -eq 0) {
+        throw "Accounting is running, but the published frontend port could not be determined."
+    }
+
+    $publishedEndpoint = $publishedEndpoints[0].Trim()
+    if ($publishedEndpoint -notmatch ':(\d+)$') {
+        throw "Accounting is running, but the published frontend port could not be determined."
+    }
+
+    $applicationUrl = "http://localhost:$($Matches[1])/"
+    Write-Host "Accounting production containers are running at $applicationUrl"
+
+    if (-not $NoBrowser) {
+        try {
+            Start-Process $applicationUrl
+        } catch {
+            Write-Warning "Accounting is running, but the browser could not be opened automatically. Open $applicationUrl manually."
+        }
+    }
 }

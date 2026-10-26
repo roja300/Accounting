@@ -22,7 +22,7 @@ Set-Location Accounting</code></pre></div>
     <div class="code-block"><div class="code-label">PowerShell</div><pre><code>Copy-Item src/.env.production.example src/.env.production
 notepad src/.env.production
 ./start-production.ps1</code></pre></div>
-    <p>The launcher builds the production images, starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application in the background, and waits for all services to become healthy. The API applies pending Entity Framework migrations during startup. Change <code>FRONTEND_PORT</code> in <code>src/.env.production</code> if port 3000 is already in use.</p>
+    <p>The launcher builds the production images, starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application in the background, waits for all services to become healthy, and opens the application in your default browser. The API applies pending Entity Framework migrations during startup. Change <code>FRONTEND_PORT</code> in <code>src/.env.production</code> if port 3000 is already in use, or pass <code>-NoBrowser</code> for a headless launch.</p>
 
     <h2 id="open-the-application">Open the application</h2>
     <div class="endpoint-list"><a href="http://localhost:3000"><span><strong>Frontend</strong><small>Use the application</small></span><code>localhost:3000</code></a><a href="http://localhost:3000/api/health/ready"><span><strong>Readiness</strong><small>Check API and database health through nginx</small></span><code>/api/health/ready</code></a></div>

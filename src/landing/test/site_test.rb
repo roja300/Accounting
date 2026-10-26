@@ -72,6 +72,7 @@ class LandingSiteTest < Minitest::Test
     assert_includes readme, "src/.env.production.example"
     assert_includes getting_started, "./start-production.ps1"
     assert_includes getting_started, "src/compose.production.yaml"
+    assert_includes getting_started, "-NoBrowser"
     assert_includes getting_started, "docker compose --env-file .env.development up --build"
   end
 end

@@ -51,3 +51,12 @@ Changed the ignored local production environment file to publish nginx on port 3
 
 1. The shared production default remains port 3000; only the machine-local, Git-ignored `src/.env.production` setting changed.
 2. Validation returned HTTP 200 for `http://localhost:3001/` and `Healthy` from `http://localhost:3001/api/health/ready` while the development stack remained running on port 3000.
+
+#### [2026-10-26 18:54] Opened the application after startup
+
+Updated the production launcher to discover nginx's published host port after the stack becomes healthy, print the resulting application URL, and open it in the default browser. Added a `-NoBrowser` option for headless and automated launches, and updated the operator documentation and its regression assertion.
+
+##### Comments
+
+1. Browser-launch failures produce a warning with the URL instead of incorrectly reporting the already-healthy production stack as failed.
+2. Validated both the headless and normal launch paths against the healthy production stack on port 3001. The topology regression passes, and the landing site passes 8 tests with 54 assertions plus a strict production build.
