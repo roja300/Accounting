@@ -70,3 +70,12 @@ Updated the launcher to detect a missing production environment file and interac
 1. Database names and users are limited to letters, numbers, and underscores. Passwords must contain at least 16 characters from the connection-string-safe set documented by the prompt, and ports must be between 1 and 65535.
 2. Added an automated regression that supplies mock interactive responses, validates every generated setting and BOM-free UTF-8 encoding, confirms Compose accepts the file, and removes the temporary configuration afterward.
 3. Validated the real interactive flow in a terminal, including masked password and confirmation prompts. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:19] Simplified first-run questions
+
+Reduced first-run setup to request only the PostgreSQL username and confirmed hidden password. The generated configuration now always uses the existing defaults of `accounting` for the database name and 3000 for the frontend port; users can still edit the ignored file afterward when a different port is required.
+
+##### Comments
+
+1. Updated the first-run regression to verify that the default database and frontend port are generated without prompting.
+2. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
