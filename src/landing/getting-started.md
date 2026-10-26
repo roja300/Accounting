@@ -18,7 +18,7 @@ description: Run the production or development Accounting stack with Docker Comp
 Set-Location Accounting</code></pre></div>
 
     <h2 id="start-production">Start production</h2>
-    <p>Run the startup script from the repository root. On the first run, it asks only for the PostgreSQL username and a hidden password, then creates the Git-ignored <code>src/.env.production</code> file with the default <code>accounting</code> database and frontend port 3000.</p>
+    <p>Run the startup script from the repository root. On the first run, it asks only for a database username and hidden password, then creates the Git-ignored <code>src/.env.production</code> file with the default <code>accounting</code> database and frontend port 3000.</p>
     <div class="code-block"><div class="code-label">PowerShell</div><pre><code>./start-production.ps1</code></pre></div>
     <p>The launcher builds the production images, starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application in the background, waits for all services to become healthy, and opens the application in your default browser. The API applies pending Entity Framework migrations during startup. Edit <code>src/.env.production</code> to change the saved configuration, or pass <code>-NoBrowser</code> for a headless launch.</p>
 

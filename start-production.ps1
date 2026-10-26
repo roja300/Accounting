@@ -46,8 +46,8 @@ function ConvertTo-PlainText {
 function Read-DatabasePassword {
     while ($true) {
         Write-Host "Use at least 16 characters containing only letters, numbers, periods, underscores, tildes, or hyphens."
-        $password = ConvertTo-PlainText (Read-Host "PostgreSQL password" -AsSecureString)
-        $confirmation = ConvertTo-PlainText (Read-Host "Confirm PostgreSQL password" -AsSecureString)
+        $password = ConvertTo-PlainText (Read-Host "Database password" -AsSecureString)
+        $confirmation = ConvertTo-PlainText (Read-Host "Confirm database password" -AsSecureString)
 
         if ($password -cne $confirmation) {
             Write-Warning "The passwords do not match. Try again."
@@ -67,7 +67,7 @@ function New-ProductionEnvironmentFile {
     param([string]$Path)
 
     Write-Host "No production environment file was found. Let's create one."
-    $user = Read-Setting "PostgreSQL user" "accounting" '^[A-Za-z0-9_]+$' "Use only letters, numbers, and underscores."
+    $user = Read-Setting "Database username" "accounting" '^[A-Za-z0-9_]+$' "Use only letters, numbers, and underscores."
     $password = Read-DatabasePassword
 
     $content = @(
