@@ -42,3 +42,12 @@ Updated the repository README and published getting-started and developer guides
 1. End-to-end validation built the production images, brought PostgreSQL, the API, and nginx to healthy state, returned HTTP 200 for the application, and returned `Healthy` from the API readiness endpoint through nginx. The test containers, network, and empty test volume were removed afterward; existing development containers were left running.
 2. Backend build and all 88 backend tests pass. Frontend type-checking, all 14 unit tests, and the production build pass. The container topology test passes, and the landing site passes 8 tests with 52 assertions plus a strict production build.
 3. The repository-wide Biome check remains blocked by pre-existing formatting and import-style diagnostics in untouched frontend files; no unrelated frontend files were rewritten.
+
+#### [2026-10-26 18:53] Resolved the local production port conflict
+
+Changed the ignored local production environment file to publish nginx on port 3001 because the preserved development frontend was already using port 3000. Resumed the interrupted Compose launch and confirmed that all production services became healthy.
+
+##### Comments
+
+1. The shared production default remains port 3000; only the machine-local, Git-ignored `src/.env.production` setting changed.
+2. Validation returned HTTP 200 for `http://localhost:3001/` and `Healthy` from `http://localhost:3001/api/health/ready` while the development stack remained running on port 3000.
