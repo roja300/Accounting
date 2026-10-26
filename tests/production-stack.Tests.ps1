@@ -29,12 +29,14 @@ function Test-FirstRunSetup {
         @("accounting_user", "FirstRunPassword-2026", "FirstRunPassword-2026") | ForEach-Object {
             $global:AccountingFirstRunResponses.Enqueue($_)
         }
+        $global:AccountingFirstRunPrompts = New-Object Collections.Generic.List[string]
         function global:Read-Host {
             param(
                 [string]$Prompt,
                 [switch]$AsSecureString
             )
 
+            $global:AccountingFirstRunPrompts.Add($Prompt)
             $response = $global:AccountingFirstRunResponses.Dequeue()
             if ($AsSecureString) {
                 return ConvertTo-SecureString $response -AsPlainText -Force
@@ -43,6 +45,8 @@ function Test-FirstRunSetup {
         }
 
         & (Join-Path $repositoryRoot "start-production.ps1") -EnvironmentFile $temporaryEnvironment -ValidateOnly -NoBrowser
+        $expectedPrompts = @("Database username [accounting]", "Database password", "Confirm database password")
+        Assert-Condition (($global:AccountingFirstRunPrompts -join "|") -eq ($expectedPrompts -join "|")) "First-run setup must request only the database username and confirmed password."
         Assert-Condition (Test-Path -LiteralPath $temporaryEnvironment -PathType Leaf) "First-run setup must create the environment file."
 
         $settings = @{}
@@ -61,6 +65,7 @@ function Test-FirstRunSetup {
     } finally {
         Remove-Item Function:\global:Read-Host -ErrorAction SilentlyContinue
         Remove-Variable AccountingFirstRunResponses -Scope Global -ErrorAction SilentlyContinue
+        Remove-Variable AccountingFirstRunPrompts -Scope Global -ErrorAction SilentlyContinue
         if (Test-Path -LiteralPath $temporaryEnvironment) {
             Remove-Item -LiteralPath $temporaryEnvironment
         }

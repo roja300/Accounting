@@ -79,3 +79,11 @@ Reduced first-run setup to request only the PostgreSQL username and confirmed hi
 
 1. Updated the first-run regression to verify that the default database and frontend port are generated without prompting.
 2. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:21] Simplified database prompt wording
+
+Changed the first-run prompts to `Database username`, `Database password`, and `Confirm database password`, removing PostgreSQL-specific terminology from the user-facing setup flow. Updated the current setup documentation to match.
+
+##### Comments
+
+1. The first-run regression verifies the exact three prompts and passes with both Compose topology definitions. The landing site passes 8 tests with 56 assertions plus a strict production build.
