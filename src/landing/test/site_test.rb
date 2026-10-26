@@ -74,6 +74,8 @@ class LandingSiteTest < Minitest::Test
     assert_includes getting_started, "src/compose.production.yaml"
     assert_includes getting_started, "hidden password"
     assert_includes getting_started, "-NoBrowser"
+    assert_includes getting_started, "./reset-production.ps1"
+    assert_includes getting_started, "Permanent data loss"
     assert_includes getting_started, "docker compose --env-file .env.development up --build"
   end
 end

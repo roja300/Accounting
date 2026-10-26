@@ -103,3 +103,13 @@ Reduced the first-run database-password minimum from 16 characters to 8 characte
 ##### Comments
 
 1. Updated the first-run regression to use an exactly eight-character password so the new lower boundary is covered; the first-run and Compose topology checks pass.
+
+#### [2026-10-26 19:26] Added a destructive production reset script
+
+Added `reset-production.ps1` to remove the production containers, network, PostgreSQL volume and data, orphaned containers, and locally built application images. The script displays an explicit permanent-data-loss warning and requires the user to type `RESET`, while `-Force` supports deliberate automation. Updated the operator documentation with reset scope and preservation details.
+
+##### Comments
+
+1. The reset deliberately preserves the ignored production environment file, pulled PostgreSQL base image, and the separate development stack.
+2. Automated coverage uses PowerShell's `-WhatIf` path and verifies the destructive Compose flags, typed confirmation, and warning without invoking a destructive Docker operation.
+3. The interactive cancellation path was verified by entering a value other than `RESET`; it reported that nothing was removed. The topology regression passes, and the landing site passes 8 tests with 60 assertions plus a strict production build.
