@@ -113,3 +113,11 @@ Added `reset-production.ps1` to remove the production containers, network, Postg
 1. The reset deliberately preserves the ignored production environment file, pulled PostgreSQL base image, and the separate development stack.
 2. Automated coverage uses PowerShell's `-WhatIf` path and verifies the destructive Compose flags, typed confirmation, and warning without invoking a destructive Docker operation.
 3. The interactive cancellation path was verified by entering a value other than `RESET`; it reported that nothing was removed. The topology regression passes, and the landing site passes 8 tests with 60 assertions plus a strict production build.
+
+#### [2026-10-26 19:31] Resolved the post-reset frontend port conflict
+
+After the production reset successfully recreated PostgreSQL and brought the backend to healthy state, the preserved development frontend still occupied port 3000. Updated only the ignored local production configuration to publish nginx on port 3001, resumed startup, and confirmed the complete production stack became healthy.
+
+##### Comments
+
+1. Validation returned HTTP 200 for `http://localhost:3001/` and `Healthy` from `http://localhost:3001/api/health/ready`; the development stack remains on port 3000.
