@@ -18,8 +18,8 @@ class LandingSiteTest < Minitest::Test
   def test_required_markdown_pages_have_front_matter
     %w[index.md getting-started.md guide.md developers.md 404.md].each do |relative_path|
       content = ROOT.join(relative_path).read
-      assert content.start_with?("---\n"), "#{relative_path} must start with Jekyll front matter"
-      assert_operator content.scan(/^---$/).length, :>=, 2, "#{relative_path} must close its front matter"
+      assert_match(/\A---\r?\n/, content, "#{relative_path} must start with Jekyll front matter")
+      assert_operator content.lines.count { |line| line.chomp == "---" }, :>=, 2, "#{relative_path} must close its front matter"
     end
   end
 
@@ -62,5 +62,20 @@ class LandingSiteTest < Minitest::Test
 
     assert_includes readme, "https://roja300.github.io/Accounting/"
     assert_includes readme, "https://roja300.github.io/Accounting/developers/"
+  end
+
+  def test_production_startup_is_documented
+    readme = ROOT.join("../..", "README.md").read
+    getting_started = ROOT.join("getting-started.md").read
+
+    assert_includes readme, "./start-production.ps1"
+    assert_includes readme, "first run"
+    assert_includes getting_started, "./start-production.ps1"
+    assert_includes getting_started, "src/compose.production.yaml"
+    assert_includes getting_started, "hidden password"
+    assert_includes getting_started, "-NoBrowser"
+    assert_includes getting_started, "./reset-production.ps1"
+    assert_includes getting_started, "Permanent data loss"
+    assert_includes getting_started, "docker compose --env-file .env.development up --build"
   end
 end

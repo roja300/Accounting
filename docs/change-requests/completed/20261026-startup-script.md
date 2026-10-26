@@ -1,0 +1,123 @@
+﻿# Add a production startup script
+
+*Date: 26/10/2026* <br>
+*Author: Rojaware*<br>
+
+## Overview
+
+Create a startup script that runs a production container orchestration for the application. Supporting documentation should also be updated.
+
+### Functional Specification (FS)
+
+1. The system should support running the entire production app through a .ps1 or bash script.
+2. The system should update the documentation to reflect this.
+3. The aforementioned script should run production containers.
+4. The development containers, and running them as I currently do should be preserved.
+
+### Non-functional Specification (NFS)
+
+1.
+
+## Notes
+
+- N/A
+
+### Codex Response
+
+#### [2026-10-26 18:45] Added the production container stack
+
+Added a root-level PowerShell launcher and an isolated production Compose definition. The production topology builds the React application into an nginx image, runs the API with the ASP.NET Core Production environment, requires the PostgreSQL password through an ignored environment file, persists PostgreSQL data, and exposes only nginx to the host. Preserved the existing development Compose definition and its Vite workflow. Added an automated topology check to continuous integration and corrected the backend Docker restore layer to include all referenced module projects.
+
+##### Comments
+
+1. The example production environment file contains no real credentials and must be copied to the ignored `src/.env.production` file before startup.
+2. The launcher and both production and development Compose configurations pass the automated topology check.
+
+#### [2026-10-26 18:49] Documented and validated production startup
+
+Updated the repository README and published getting-started and developer guides with production setup, startup, health-check, shutdown, port-selection, data-retention, and TLS-boundary guidance while retaining the existing development and local HTTPS commands. Added documentation regression coverage and made the existing landing front-matter assertions accept valid LF and CRLF checkouts.
+
+##### Comments
+
+1. End-to-end validation built the production images, brought PostgreSQL, the API, and nginx to healthy state, returned HTTP 200 for the application, and returned `Healthy` from the API readiness endpoint through nginx. The test containers, network, and empty test volume were removed afterward; existing development containers were left running.
+2. Backend build and all 88 backend tests pass. Frontend type-checking, all 14 unit tests, and the production build pass. The container topology test passes, and the landing site passes 8 tests with 52 assertions plus a strict production build.
+3. The repository-wide Biome check remains blocked by pre-existing formatting and import-style diagnostics in untouched frontend files; no unrelated frontend files were rewritten.
+
+#### [2026-10-26 18:53] Resolved the local production port conflict
+
+Changed the ignored local production environment file to publish nginx on port 3001 because the preserved development frontend was already using port 3000. Resumed the interrupted Compose launch and confirmed that all production services became healthy.
+
+##### Comments
+
+1. The shared production default remains port 3000; only the machine-local, Git-ignored `src/.env.production` setting changed.
+2. Validation returned HTTP 200 for `http://localhost:3001/` and `Healthy` from `http://localhost:3001/api/health/ready` while the development stack remained running on port 3000.
+
+#### [2026-10-26 18:54] Opened the application after startup
+
+Updated the production launcher to discover nginx's published host port after the stack becomes healthy, print the resulting application URL, and open it in the default browser. Added a `-NoBrowser` option for headless and automated launches, and updated the operator documentation and its regression assertion.
+
+##### Comments
+
+1. Browser-launch failures produce a warning with the URL instead of incorrectly reporting the already-healthy production stack as failed.
+2. Validated both the headless and normal launch paths against the healthy production stack on port 3001. The topology regression passes, and the landing site passes 8 tests with 54 assertions plus a strict production build.
+
+#### [2026-10-26 18:57] Added interactive first-run configuration
+
+Updated the launcher to detect a missing production environment file and interactively request the PostgreSQL database name, user, confirmed hidden password, and frontend port before generating the Git-ignored configuration and continuing startup. Existing environment files remain untouched. Updated the operator documentation and its regression assertions to describe the first-run flow.
+
+##### Comments
+
+1. Database names and users are limited to letters, numbers, and underscores. Passwords must contain at least 16 characters from the connection-string-safe set documented by the prompt, and ports must be between 1 and 65535.
+2. Added an automated regression that supplies mock interactive responses, validates every generated setting and BOM-free UTF-8 encoding, confirms Compose accepts the file, and removes the temporary configuration afterward.
+3. Validated the real interactive flow in a terminal, including masked password and confirmation prompts. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:19] Simplified first-run questions
+
+Reduced first-run setup to request only the PostgreSQL username and confirmed hidden password. The generated configuration now always uses the existing defaults of `accounting` for the database name and 3000 for the frontend port; users can still edit the ignored file afterward when a different port is required.
+
+##### Comments
+
+1. Updated the first-run regression to verify that the default database and frontend port are generated without prompting.
+2. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:21] Simplified database prompt wording
+
+Changed the first-run prompts to `Database username`, `Database password`, and `Confirm database password`, removing PostgreSQL-specific terminology from the user-facing setup flow. Updated the current setup documentation to match.
+
+##### Comments
+
+1. The first-run regression verifies the exact three prompts and passes with both Compose topology definitions. The landing site passes 8 tests with 56 assertions plus a strict production build.
+
+#### [2026-10-26 19:22] Required an explicit database username
+
+Removed the displayed `accounting` default from the database username prompt. First-run setup now shows only `Database username` and rejects an empty response instead of silently selecting a username.
+
+##### Comments
+
+1. Updated the prompt regression to require the exact label without a bracketed default; the first-run and Compose topology checks pass.
+
+#### [2026-10-26 19:23] Allowed eight-character database passwords
+
+Reduced the first-run database-password minimum from 16 characters to 8 characters while retaining confirmation and the connection-string-safe character restriction.
+
+##### Comments
+
+1. Updated the first-run regression to use an exactly eight-character password so the new lower boundary is covered; the first-run and Compose topology checks pass.
+
+#### [2026-10-26 19:26] Added a destructive production reset script
+
+Added `reset-production.ps1` to remove the production containers, network, PostgreSQL volume and data, orphaned containers, and locally built application images. The script displays an explicit permanent-data-loss warning and requires the user to type `RESET`, while `-Force` supports deliberate automation. Updated the operator documentation with reset scope and preservation details.
+
+##### Comments
+
+1. The reset deliberately preserves the ignored production environment file, pulled PostgreSQL base image, and the separate development stack.
+2. Automated coverage uses PowerShell's `-WhatIf` path and verifies the destructive Compose flags, typed confirmation, and warning without invoking a destructive Docker operation.
+3. The interactive cancellation path was verified by entering a value other than `RESET`; it reported that nothing was removed. The topology regression passes, and the landing site passes 8 tests with 60 assertions plus a strict production build.
+
+#### [2026-10-26 19:31] Resolved the post-reset frontend port conflict
+
+After the production reset successfully recreated PostgreSQL and brought the backend to healthy state, the preserved development frontend still occupied port 3000. Updated only the ignored local production configuration to publish nginx on port 3001, resumed startup, and confirmed the complete production stack became healthy.
+
+##### Comments
+
+1. Validation returned HTTP 200 for `http://localhost:3001/` and `Healthy` from `http://localhost:3001/api/health/ready`; the development stack remains on port 3000.

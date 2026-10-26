@@ -2,6 +2,36 @@
 
 Accounting is a self-hosted workspace for work records, invoices, bank payments, and practical UK tax estimates.
 
+## Run the production stack
+
+Install Docker Desktop with Docker Compose, then run the launcher from the repository root:
+
+```powershell
+./start-production.ps1
+```
+
+On the first run, the launcher asks only for a database username and hidden password, then creates the Git-ignored `src/.env.production` file with the default `accounting` database and frontend port 3000. It builds and starts PostgreSQL, the ASP.NET Core API, and the nginx-hosted React application, waits for every service to become healthy, and opens the application in your default browser. Edit `src/.env.production` to change the saved configuration, or pass `-NoBrowser` when running headlessly. Only nginx is exposed to the host; terminate TLS with a trusted reverse proxy before exposing the application outside a trusted network.
+
+Stop the production containers without deleting their PostgreSQL data:
+
+```powershell
+docker compose --env-file src/.env.production --file src/compose.production.yaml down
+```
+
+To permanently reset production, including all database data, volumes, containers, networks, and locally built application images, run the reset script and type `RESET` at its warning prompt:
+
+```powershell
+./reset-production.ps1
+```
+
+The reset preserves `src/.env.production` and the pulled PostgreSQL base image. This operation cannot be undone.
+
+The existing development workflow remains available from `src/`:
+
+```powershell
+docker compose --env-file .env.development up --build
+```
+
 The project documentation is published on GitHub Pages:
 
 - [Overview](https://roja300.github.io/Accounting/)

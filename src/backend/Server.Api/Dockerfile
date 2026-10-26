@@ -12,7 +12,9 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Server.Api/Server.Api.csproj", "Server.Api/"]
 COPY ["Server.Invoices/Server.Invoices.csproj", "Server.Invoices/"]
+COPY ["Server.Payments/Server.Payments.csproj", "Server.Payments/"]
 COPY ["Server.Shared/Server.Shared.csproj", "Server.Shared/"]
+COPY ["Server.Tax/Server.Tax.csproj", "Server.Tax/"]
 RUN dotnet restore "Server.Api/Server.Api.csproj"
 COPY . .
 WORKDIR "/src/Server.Api"
