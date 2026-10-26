@@ -60,3 +60,13 @@ Updated the production launcher to discover nginx's published host port after th
 
 1. Browser-launch failures produce a warning with the URL instead of incorrectly reporting the already-healthy production stack as failed.
 2. Validated both the headless and normal launch paths against the healthy production stack on port 3001. The topology regression passes, and the landing site passes 8 tests with 54 assertions plus a strict production build.
+
+#### [2026-10-26 18:57] Added interactive first-run configuration
+
+Updated the launcher to detect a missing production environment file and interactively request the PostgreSQL database name, user, confirmed hidden password, and frontend port before generating the Git-ignored configuration and continuing startup. Existing environment files remain untouched. Updated the operator documentation and its regression assertions to describe the first-run flow.
+
+##### Comments
+
+1. Database names and users are limited to letters, numbers, and underscores. Passwords must contain at least 16 characters from the connection-string-safe set documented by the prompt, and ports must be between 1 and 65535.
+2. Added an automated regression that supplies mock interactive responses, validates every generated setting and BOM-free UTF-8 encoding, confirms Compose accepts the file, and removes the temporary configuration afterward.
+3. Validated the real interactive flow in a terminal, including masked password and confirmation prompts. The topology regression passes, and the landing site passes 8 tests with 56 assertions plus a strict production build.
