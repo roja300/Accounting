@@ -13,6 +13,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  container-topology:
+    name: Container topology
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate production and development stacks
+        shell: pwsh
+        run: ./tests/production-stack.Tests.ps1
+
   backend:
     name: Backend
     runs-on: ubuntu-latest

@@ -1,0 +1,63 @@
+name: accounting-production
+
+services:
+  postgresql:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-accounting}
+      POSTGRES_USER: ${POSTGRES_USER:-accounting}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the production environment file}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - accounting
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Server.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      Https__RedirectEnabled: "false"
+      ConnectionStrings__PostgreSQL: "Host=postgresql;Port=5432;Database=${POSTGRES_DB:-accounting};Username=${POSTGRES_USER:-accounting};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the production environment file}"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/ready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - accounting
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - accounting
+
+volumes:
+  postgres_data:
+
+networks:
+  accounting:
+    driver: bridge
