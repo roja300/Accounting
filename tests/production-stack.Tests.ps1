@@ -72,7 +72,23 @@ function Test-FirstRunSetup {
     }
 }
 
+function Test-ProductionReset {
+    $resetScript = Join-Path $repositoryRoot "reset-production.ps1"
+    $resetWarnings = @()
+    & $resetScript -EnvironmentFile $productionEnvironment -Force -WhatIf -WarningVariable resetWarnings
+    $source = Get-Content -Raw $resetScript
+
+    Assert-Condition (($resetWarnings -join " ") -match 'permanently deletes.*database data') "Production reset must display a permanent data-loss warning."
+    Assert-Condition ($source -match 'CmdletBinding\(SupportsShouldProcess = \$true') "Production reset must support a non-destructive WhatIf preview."
+    Assert-Condition ($source -match '(?m)^\s+down\s+`$') "Production reset must take the production stack down."
+    Assert-Condition ($source -match '(?m)^\s+--volumes\s+`$') "Production reset must remove production volumes."
+    Assert-Condition ($source -match '(?m)^\s+--rmi local\s+`$') "Production reset must remove locally built production images."
+    Assert-Condition ($source -match '(?m)^\s+--remove-orphans\s*$') "Production reset must remove orphaned production containers."
+    Assert-Condition ($source -match 'Type RESET to continue') "Production reset must require an explicit RESET confirmation."
+}
+
 Test-FirstRunSetup
+Test-ProductionReset
 & (Join-Path $repositoryRoot "start-production.ps1") -EnvironmentFile $productionEnvironment -ValidateOnly
 
 $productionJson = & docker compose --env-file $productionEnvironment --file $productionCompose config --format json

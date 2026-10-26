@@ -31,6 +31,8 @@ Set-Location Accounting</code></pre></div>
     <h2 id="stop-production">Stop production</h2>
     <div class="code-block"><div class="code-label">PowerShell</div><pre><code>docker compose --env-file src/.env.production --file src/compose.production.yaml down</code></pre></div>
     <div class="warning"><strong>Keep your data</strong><p>Do not add <code>--volumes</code> unless you intentionally want to delete the production PostgreSQL volume and all application data.</p></div>
+    <p>To permanently remove all production database data, volumes, containers, networks, and locally built application images, run <code>./reset-production.ps1</code> from the repository root and type <code>RESET</code> at the warning prompt. The reset preserves <code>src/.env.production</code> and the pulled PostgreSQL base image.</p>
+    <div class="warning"><strong>Permanent data loss</strong><p>The production reset cannot be undone. Back up any data you need before running it.</p></div>
 
     <h2 id="development-stack">Development stack</h2>
     <p>The existing development workflow remains separate and unchanged. It runs Vite with the frontend source mounted for live updates and publishes PostgreSQL and the API for local tooling.</p>

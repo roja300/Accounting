@@ -18,6 +18,14 @@ Stop the production containers without deleting their PostgreSQL data:
 docker compose --env-file src/.env.production --file src/compose.production.yaml down
 ```
 
+To permanently reset production, including all database data, volumes, containers, networks, and locally built application images, run the reset script and type `RESET` at its warning prompt:
+
+```powershell
+./reset-production.ps1
+```
+
+The reset preserves `src/.env.production` and the pulled PostgreSQL base image. This operation cannot be undone.
+
 The existing development workflow remains available from `src/`:
 
 ```powershell
